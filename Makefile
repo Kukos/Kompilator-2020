@@ -6,6 +6,7 @@ RM := rm -rf
 # DIRS
 IDIR = ./inc
 SDIR = ./src
+VMDIR := ./vm
 
 # COMPI, DEFAULT G++
 CXX ?= g++
@@ -39,8 +40,9 @@ LIBS = fl
 H_INC := $(foreach d, $(IDIR), -I$d)
 L_INC := $(foreach l, $(LIB), -l$l)
 
-all: compiler
+all: compiler vm
 
+.PHONY:compiler
 compiler: $(EXEC)
 
 $(SDIR)/parser_tab.c $(IDIR)/parser_tab.h: $(SDIR)/parser.y
@@ -55,9 +57,15 @@ $(SDIR)/parser_lex.yy.c: $(SDIR)/parser.l $(IDIR)/parser_tab.h
 $(EXEC): $(SDIR)/parser_lex.yy.c $(SDIR)/parser_tab.c $(IDIR)/parser_tab.h $(OBJ)
 	$(CXX) $(CXXFLAGS) -D_GNU_SOURCE $(H_INC) $(SDIR)/parser_tab.c $(SDIR)/parser_lex.yy.c $(OBJ) $(L_INC) -o $@
 
+.PHONY:vm
+vm:
+	@cd $(VMDIR) && $(MAKE) --no-print-directory
+
+.PHONY:clean
 clean:
 	$(RM) $(IDIR)/parser_tab.h
 	$(RM) $(SDIR)/parser_tab.c
 	$(RM) $(SDIR)/parser_lex.yy.c
 	$(RM) $(OBJ)
 	$(RM) $(EXEC)
+	@cd $(VMDIR) && $(MAKE) cleanall --no-print-directory
