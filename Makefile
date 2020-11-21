@@ -4,14 +4,15 @@
 RM := rm -rf
 
 # DIRS
-IDIR = ./inc
-SDIR = ./src
+IDIR  := ./inc
+SDIR  := ./src
 VMDIR := ./vm
+TDIR  := ./test
 
 # COMPI, DEFAULT G++
 CXX ?= g++
-LEX = flex
-YAC = bison
+LEX := flex
+YAC := bison
 
 CXX_STD   := -std=c++17
 CXX_OPT   := -O3
@@ -46,7 +47,7 @@ all: compiler vm
 compiler: $(EXEC)
 
 $(SDIR)/parser_tab.c $(IDIR)/parser_tab.h: $(SDIR)/parser.y
-	$(YAC) --defines=$(IDIR)/parser_tab.h $(SDIR)/parser.y -o $(SDIR)/parser_tab.c
+	$(YAC) --debug --defines=$(IDIR)/parser_tab.h $(SDIR)/parser.y -o $(SDIR)/parser_tab.c
 
 $(SDIR)/parser_lex.yy.c: $(SDIR)/parser.l $(IDIR)/parser_tab.h
 	$(LEX) -o $@ $(SDIR)/parser.l
@@ -55,11 +56,15 @@ $(SDIR)/parser_lex.yy.c: $(SDIR)/parser.l $(IDIR)/parser_tab.h
 	$(CXX) $(CXXFLAGS) $(H_INC) -c $< -o $@
 
 $(EXEC): $(SDIR)/parser_lex.yy.c $(SDIR)/parser_tab.c $(IDIR)/parser_tab.h $(OBJ)
-	$(CXX) $(CXXFLAGS) -D_GNU_SOURCE $(H_INC) $(SDIR)/parser_tab.c $(SDIR)/parser_lex.yy.c $(OBJ) $(L_INC) -o $@
+	$(CXX) $(CXXFLAGS) $(H_INC) $(SDIR)/parser_tab.c $(SDIR)/parser_lex.yy.c $(OBJ) $(L_INC) -o $@
 
 .PHONY:vm
 vm:
 	@cd $(VMDIR) && $(MAKE) --no-print-directory
+
+.PHONY:test
+test: compiler vm
+	@cd $(TDIR) && ./tests.sh
 
 .PHONY:clean
 clean:
