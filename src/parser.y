@@ -2,11 +2,28 @@
 #include <iostream>
 #include <fstream>
 #include <cstdio>
+#include <cstdarg>
+#include <cinttypes>
 
+#include <compiler.hpp>
+#include <value.hpp>
+#include <rvalue.hpp>
+#include <lvalue.hpp>
+#include <lvalue-var.hpp>
+#include <lvalue-array.hpp>
+
+// C like functions for YACC / FLEX
 static void yyerror(const char *msg);
+static void pr_error(const char *fmt, ...);
 static int yyparse(void);
-
 int yylex(void);
+
+// C++ function for parser
+static void assert_declaration(const std::string& name, uint64_t line);
+static void assert_redeclaration(const std::string& name, uint64_t line);
+static void assert_usage(const std::string& name, Value::valtype_t type, uint64_t line);
+static void assert_initalization(Value *val, uint64_t line);
+static void assert_mutuable(Value *val, uint64_t line);
 
 extern FILE *yyin;
 
@@ -16,18 +33,28 @@ extern FILE *yyin;
 #define pr_dbg(...)
 #endif
 
+/* Global variables */
+static Compiler compiler;
+
 %}
 
 %code requires
 {
-    #include <stdint.h>
-    #include <string>
+    #include <cstdint>
+    #include <cstring>
+
+    #include <compiler.hpp>
+    #include <value.hpp>
+    #include <rvalue.hpp>
+    #include <lvalue.hpp>
+    #include <lvalue-var.hpp>
+    #include <lvalue-array.hpp>
 
     typedef struct Parser_token
     {
         uint64_t val;
         uint64_t line;
-        std::string* str;
+        std::string* str; // Yacc needs pointer instead of class
     } Parser_token;
 
 }
@@ -35,6 +62,7 @@ extern FILE *yyin;
 %union
 {
     Parser_token ptoken;
+    Value* value; // abstract class
 }
 
 %token	YY_EQ YY_NE YY_LT YY_GT YY_LE YY_GE
@@ -66,7 +94,7 @@ extern FILE *yyin;
 %type <ptoken>	YY_ERROR
 %type <ptoken>	YY_SEMICOLON YY_COMMA
 
-%type <ptoken>  lvalue rvalue value
+%type <value>  lvalue rvalue value
 
 %%
 
@@ -95,22 +123,55 @@ value:
 rvalue:
     YY_NUM
     {
-
+        // push forward numeric value as Rvalue
+        $$ = new Rvalue($1.val);
     }
 ;
 
 lvalue:
     YY_VARIABLE
     {
+        assert_declaration(*($1.str), $1.line);
+        assert_usage(*($1.str), Value::VALTYPE_LVALUE_VAR, $1.line);
 
+        Lvalue* var = compiler.get_variable(*($1.str));
+        $$ = var;
+
+        delete $1.str;
     }
     | YY_VARIABLE YY_L_BRACKET YY_VARIABLE YY_R_BRACKET
     {
+        assert_declaration(*($1.str), $1.line);
+        assert_declaration(*($3.str), $3.line);
 
+        assert_usage(*($1.str), Value::VALTYPE_LVALUE_ARRAY, $1.line);
+        assert_usage(*($3.str), Value::VALTYPE_LVALUE_VAR, $3.line);
+
+        Lvalue* array = compiler.get_variable(*($1.str));
+        Lvalue* var = compiler.get_variable(*($3.str));
+
+        // Now we are sure that access is correct we can cast it to array and set var as access point
+        dynamic_cast<Lvalue_array*>(array)->set_access_element(var);
+
+        $$ = array;
+
+        delete $1.str;
+        delete $3.str;
     }
     | YY_VARIABLE YY_L_BRACKET YY_NUM YY_R_BRACKET
     {
+        assert_declaration(*($1.str), $1.line);
+        assert_usage(*($1.str), Value::VALTYPE_LVALUE_ARRAY, $1.line);
 
+        Lvalue* array = compiler.get_variable(*($1.str));
+        Rvalue* val = new Rvalue($3.val);
+
+        // Now we are sure that access is correct we can cast it to array and set val as access point
+        dynamic_cast<Lvalue_array*>(array)->set_access_element(val);
+
+        $$ = array;
+
+        delete $1.str;
     }
 ;
 
@@ -118,18 +179,51 @@ vdeclar:
     | vdeclar YY_COMMA YY_VARIABLE
     {
         pr_dbg("Next Variable declaration: %s\n", $3.str->c_str());
+
+        assert_redeclaration(*($3.str), $3.line);
+
+        Lvalue* var = new Lvalue_var(*($3.str), true);
+        compiler.declare_variable(var);
+
+        delete $3.str;
     }
     | vdeclar YY_COMMA YY_VARIABLE YY_L_BRACKET YY_NUM YY_ARRAY_RANGE YY_NUM YY_R_BRACKET
     {
         pr_dbg("Next Array declaration: %s\n", $3.str->c_str());
+
+        assert_redeclaration(*($3.str), $3.line);
+        if ($5.val > $7.val)
+            pr_error("BLAD: Zly zakres tablicy %s w linii %" PRIu64 "\n", $3.str->c_str(), $3.line);
+
+        Lvalue* var = new Lvalue_array(*($3.str), $5.val, $7.val - $5.val + 1);
+        compiler.declare_variable(var);
+
+        delete $3.str;
     }
     | YY_VARIABLE
     {
         pr_dbg("First Variable declaration: %s\n", $1.str->c_str());
+
+        assert_redeclaration(*($1.str), $1.line);
+
+        Lvalue* var = new Lvalue_var(*($1.str), true);
+        compiler.declare_variable(var);
+
+        delete $1.str;
     }
     | YY_VARIABLE YY_L_BRACKET YY_NUM YY_ARRAY_RANGE YY_NUM YY_R_BRACKET
     {
         pr_dbg("First Array declaration: %s\n", $1.str->c_str());
+
+        assert_redeclaration(*($1.str), $1.line);
+
+        if ($3.val > $5.val)
+            pr_error("BLAD: Zly zakres tablicy %s w linii %" PRIu64 "\n", $1.str->c_str(), $1.line);
+
+        Lvalue* var = new Lvalue_array(*($1.str), $3.val, $5.val - $3.val + 1);
+        compiler.declare_variable(var);
+
+        delete $1.str;
     }
 ;
 
@@ -149,14 +243,33 @@ command:
     lvalue YY_ASSIGN expr YY_SEMICOLON
     {
         pr_dbg("Assigment\n");
+
+        assert_mutuable($1, $2.line);
+
+        // For sure we have Lvalue (var or array)
+        Lvalue* lval = dynamic_cast<Lvalue*>($1);
+
+        // after assigment set init flag
+        lval->set_init();
     }
     | YY_READ lvalue YY_SEMICOLON
     {
         pr_dbg("Read\n");
+
+        assert_mutuable($2, $1.line);
+
+        // For sure we have Lvalue (var or array)
+        Lvalue* lval = dynamic_cast<Lvalue*>($2);
+
+        // after assigment set init flag
+        lval->set_init();
     }
     | YY_WRITE value YY_SEMICOLON
     {
         pr_dbg("Write\n");
+
+       assert_initalization($2, $1.line);
+
     }
     | fordeclar forend
     {
@@ -184,17 +297,50 @@ fordeclar:
     YY_FOR YY_VARIABLE YY_FROM value YY_TO value YY_DO
     {
         pr_dbg("For DO\n");
+
+        assert_initalization($4, $1.line);
+        assert_initalization($6, $1.line);
+
+        assert_redeclaration(*($2.str), $1.line);
+
+        // Alloc iterator as a const variable
+        Lvalue* var = new Lvalue_var(*($2.str), false);
+        compiler.declare_variable(var);
+
+        // iterator is always inited
+        var->set_init();
+
+        // TODO!
+        Loop loop(var, NULL, Loop::LOOP_TYPE_FOR_DO);
+        compiler.add_loop_to_stack(loop);
     }
     | YY_FOR YY_VARIABLE YY_FROM value YY_DOWNTO value YY_DO
     {
         pr_dbg("For DOWNTO\n");
+
+        assert_initalization($4, $1.line);
+        assert_initalization($6, $1.line);
+
+        assert_redeclaration(*($2.str), $1.line);
+
+        // Alloc iterator as a const variable
+        Lvalue* var = new Lvalue_var(*($2.str), false);
+        compiler.declare_variable(var);
+
+        // iterator is always inited
+        var->set_init();
+
+        // TODO!
+        Loop loop(var, NULL, Loop::LOOP_TYPE_FOR_DOWNTO);
+        compiler.add_loop_to_stack(loop);
     }
 ;
 
 forend:
     commands YY_ENDFOR
     {
-
+        Loop loop = compiler.get_loop_from_stack();
+        compiler.undeclare_variable(loop.get_iterator());
     }
 ;
 
@@ -258,26 +404,43 @@ expr:
     value
     {
         pr_dbg("Value expression\n");
+
+        assert_initalization($1, 0);
     }
     | value YY_ADD value
     {
         pr_dbg("ADD\n");
+
+        assert_initalization($1, $2.line);
+        assert_initalization($3, $2.line);
     }
     | value YY_SUB value
     {
         pr_dbg("SUB\n");
+
+        assert_initalization($1, $2.line);
+        assert_initalization($3, $2.line);
     }
     | value YY_MUL value
     {
         pr_dbg("MUL\n");
+
+        assert_initalization($1, $2.line);
+        assert_initalization($3, $2.line);
     }
     | value YY_DIV value
     {
         pr_dbg("DIV\n");
+
+        assert_initalization($1, $2.line);
+        assert_initalization($3, $2.line);
     }
     | value YY_MOD value
     {
         pr_dbg("MOD\n");
+
+        assert_initalization($1, $2.line);
+        assert_initalization($3, $2.line);
     }
 ;
 
@@ -285,35 +448,105 @@ cond:
     value YY_EQ value
     {
         pr_dbg("EQ\n");
+
+        assert_initalization($1, $2.line);
+        assert_initalization($3, $2.line);
     }
     | value YY_NE value
     {
         pr_dbg("NE\n");
+
+        assert_initalization($1, $2.line);
+        assert_initalization($3, $2.line);
     }
     | value YY_LT value
     {
         pr_dbg("LT\n");
+
+        assert_initalization($1, $2.line);
+        assert_initalization($3, $2.line);
     }
     | value YY_LE value
     {
         pr_dbg("LE\n");
+
+        assert_initalization($1, $2.line);
+        assert_initalization($3, $2.line);
     }
     | value YY_GT value
     {
         pr_dbg("GT\n");
+
+        assert_initalization($1, $2.line);
+        assert_initalization($3, $2.line);
     }
     | value YY_GE value
     {
         pr_dbg("GE\n");
+
+        assert_initalization($1, $2.line);
+        assert_initalization($3, $2.line);
     }
 ;
 
 %%
 
+static void pr_error(const char *fmt, ...)
+{
+    va_list args;
+    va_start (args, fmt);
+
+    vfprintf(stderr, fmt, args);
+
+    va_end(args);
+
+    exit(1);
+}
 
 static void yyerror(const char* msg)
 {
-    std::cerr << "BLAD: " << msg << " w lini " << yylval.ptoken.line << std::endl;
+    std::cerr << "BLAD: " << msg << " w linii " << yylval.ptoken.line << std::endl;
+}
+
+static void assert_declaration(const std::string& name, uint64_t line)
+{
+    if (!compiler.is_variable_declared(name))
+        pr_error("BLAD: Niezadeklarowana zmienna %s w linii %" PRIu64 "\n", name.c_str(), line);
+}
+
+static void assert_redeclaration(const std::string& name, uint64_t line)
+{
+    if (compiler.is_variable_declared(name))
+        pr_error("BLAD: Redeklaracja zmiennej %s w linii %" PRIu64 "\n", name.c_str(), line);
+}
+
+static void assert_usage(const std::string& name, Value::valtype_t type, uint64_t line)
+{
+    Lvalue* lval = compiler.get_variable(name);
+    if (lval->get_type() != type)
+        pr_error("BLAD: Nieprawidlowe uzycie zmiennej %s w linii %" PRIu64 "\n", name.c_str(), line);
+}
+
+static void assert_initalization(Value *val, uint64_t line)
+{
+    // check if variable has been inited, Rval and Arrays are always inited
+    if (val->get_type() == Value::VALTYPE_LVALUE_VAR)
+    {
+        Lvalue* lval = dynamic_cast<Lvalue*>(val);
+        if (!lval->is_init())
+            pr_error("BLAD: Uzycie zmiennej %s bez inicjalizacji w linii %" PRIu64 "\n", lval->get_name().c_str(), line);
+    }
+}
+
+static void assert_mutuable(Value *val, uint64_t line)
+{
+    // check if variable can be modyfied, Rval and Arrays cannot be by gramma rules, so there is no need to check it here
+    if (val->get_type() == Value::VALTYPE_LVALUE_VAR)
+    {
+        Lvalue* lval = dynamic_cast<Lvalue*>(val);
+        if (!lval->is_mutuable())
+            pr_error("BLAD: Proba nadpisania zmiennej %s typu const w linii %" PRIu64 "\n", lval->get_name().c_str(), line);
+    }
 }
 
 int compile(const char* in_file, const char* out_file)

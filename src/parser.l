@@ -123,22 +123,28 @@ ENDIF                       {   return lex_dbg(YY_ENDIF);                       
 static int lex(int token)
 {
     yylval.ptoken.line = lines;
+    yylval.ptoken.val = 0;
+    yylval.ptoken.str = NULL;
 
     return token;
 }
 
 static int lex_num(int token)
 {
+    yylval.ptoken.line = lines;
     yylval.ptoken.val = strtoull(yytext, NULL, 10);
+    yylval.ptoken.str = NULL;
 
-    return lex(token);
+    return token;
 }
 
 static int lex_var(int token)
 {
+    yylval.ptoken.val = 0;
+    yylval.ptoken.line = lines;
     yylval.ptoken.str = new std::string(yytext);
 
-    return lex(token);
+    return token;
 }
 
 int yywrap()
