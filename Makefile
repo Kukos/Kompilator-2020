@@ -14,15 +14,15 @@ CXX ?= g++
 LEX := flex
 YAC := bison
 
-CXX_STD   := -std=c++17
-CXX_OPT   := -O3
-CXX_FLAGS :=
-CXX_WARNS :=
+CXX_STD   = -std=c++17
+CXX_OPT   = -O3
+CXX_FLAGS =
+CXX_WARNS =
 
 ifeq ($(CXX),clang++)
 	CXX_WARNS += -Weverything
 else ifneq (, $(filter $(CC), cc gcc))
-	CXX_WARNS += -Wall -Wextra -pedantic
+	CXX_WARNS += -Wall -Wextra
 endif
 
 ifeq ("$(origin DEBUG)", "command line")
@@ -52,11 +52,14 @@ $(SDIR)/parser_tab.c $(IDIR)/parser_tab.h: $(SDIR)/parser.y
 $(SDIR)/parser_lex.yy.c: $(SDIR)/parser.l $(IDIR)/parser_tab.h
 	$(LEX) -o $@ $(SDIR)/parser.l
 
-%.o:%.cpp
-	$(CXX) $(CXXFLAGS) $(H_INC) -c $< -o $@
+%.o:%.cpp _FORCE
+	$(CXX) $(CXX_FLAGS) $(H_INC) -c $< -o $@
+
+_FORCE:
+
 
 $(EXEC): $(SDIR)/parser_lex.yy.c $(SDIR)/parser_tab.c $(IDIR)/parser_tab.h $(OBJ)
-	$(CXX) $(CXXFLAGS) $(H_INC) $(SDIR)/parser_tab.c $(SDIR)/parser_lex.yy.c $(OBJ) $(L_INC) -o $@
+	$(CXX) $(CXX_FLAGS) $(H_INC) $(SDIR)/parser_tab.c $(SDIR)/parser_lex.yy.c $(OBJ) $(L_INC) -o $@
 
 .PHONY:vm
 vm:
