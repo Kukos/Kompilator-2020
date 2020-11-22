@@ -1,8 +1,8 @@
 %{
 
 #include <parser_tab.h>
-#include <stdint.h>
-#include <stdio.h>
+#include <cstdint>
+#include <cstdio>
 
 uint64_t lines = 1;
 

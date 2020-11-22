@@ -1,7 +1,7 @@
 %{
 #include <iostream>
 #include <fstream>
-#include <stdio.h>
+#include <cstdio>
 
 static void yyerror(const char *msg);
 static int yyparse(void);
@@ -313,7 +313,7 @@ cond:
 
 static void yyerror(const char* msg)
 {
-    std::cerr << "BLAD: " << msg << std::endl;
+    std::cerr << "BLAD: " << msg << " w lini " << yylval.ptoken.line << std::endl;
 }
 
 int compile(const char* in_file, const char* out_file)
