@@ -124,7 +124,7 @@ static int lex(int token)
 {
     yylval.ptoken.line = lines;
     yylval.ptoken.val = 0;
-    yylval.ptoken.str = NULL;
+    yylval.ptoken.str = nullptr;
 
     return token;
 }
@@ -132,8 +132,8 @@ static int lex(int token)
 static int lex_num(int token)
 {
     yylval.ptoken.line = lines;
-    yylval.ptoken.val = strtoull(yytext, NULL, 10);
-    yylval.ptoken.str = NULL;
+    yylval.ptoken.val = strtoull(yytext, nullptr, 10);
+    yylval.ptoken.str = nullptr;
 
     return token;
 }

@@ -311,7 +311,7 @@ fordeclar:
         var->set_init();
 
         // TODO!
-        Loop loop(var, NULL, Loop::LOOP_TYPE_FOR_DO);
+        Loop loop(var, nullptr, Loop::LOOP_TYPE_FOR_DO);
         compiler.add_loop_to_stack(loop);
     }
     | YY_FOR YY_VARIABLE YY_FROM value YY_DOWNTO value YY_DO
@@ -331,7 +331,7 @@ fordeclar:
         var->set_init();
 
         // TODO!
-        Loop loop(var, NULL, Loop::LOOP_TYPE_FOR_DOWNTO);
+        Loop loop(var, nullptr, Loop::LOOP_TYPE_FOR_DOWNTO);
         compiler.add_loop_to_stack(loop);
     }
 ;
