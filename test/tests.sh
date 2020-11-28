@@ -181,3 +181,24 @@ fi
 
 rm -f $out_file
 rm -f $error_file
+
+# TESTS OF CORRETNESS USING VM
+in_file="./io.txt"
+asm_file="./asm.txt"
+out_file="./out.txt"
+expected_out_file="./io_expected.txt"
+error_file="./error.txt"
+name="I/O"
+../kompilator $in_file $asm_file 2>$error_file
+echo -n "TEST: $name ..."
+echo "5 1111 99 88 77 66" | ../vm/maszyna-wirtualna-cln $asm_file | sed 's/? //g' | grep ">" | sed 's/> //g' >$out_file
+diff_res=$(diff $out_file $expected_out_file)
+if [ -s $error_file ] || [ "$diff_res" ]; then
+    echo -e " \033[0;31mFAILED\033[0m"
+else
+    echo -e " \033[0;32mPASSED\033[0m"
+fi
+
+rm -f $asm_file
+rm -f $out_file
+rm -f $error_file

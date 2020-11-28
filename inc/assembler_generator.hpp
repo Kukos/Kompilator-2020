@@ -40,6 +40,17 @@ private:
 
 public:
     // Methods defined by Language. Generator produce code and write into code vector
+    void load(const Register& x, const Value& val) noexcept;
+    void store(const Lvalue& var, const Register& x) noexcept;
+
+    void read(const Lvalue& var) noexcept;
+    void write(const Value& val) noexcept;
+
+    void finish_program() noexcept;
+
+
+    // get code in 1 string
+    std::string get_generated_code() const noexcept;
 };
 
 #endif

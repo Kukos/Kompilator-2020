@@ -101,11 +101,15 @@ static Compiler compiler;
 program:
     YY_DECLARE_VAR vdeclar YY_BEGIN commands YY_END
     {
-
+        // we go here when whole program had been compiled
+        // so we can finish here
+        compiler.get_asm_generator().finish_program();
     }
     | YY_BEGIN commands YY_END
     {
-
+        // we go here when whole program had been compiled
+        // so we can finish here
+        compiler.get_asm_generator().finish_program();
     }
 ;
 
@@ -261,6 +265,8 @@ command:
         // For sure we have Lvalue (var or array)
         Lvalue* lval = dynamic_cast<Lvalue*>($2);
 
+        compiler.get_asm_generator().read(*lval);
+
         // after assigment set init flag
         lval->set_init();
     }
@@ -269,6 +275,8 @@ command:
         pr_dbg("Write\n");
 
        assert_initalization($2, $1.line);
+
+       compiler.get_asm_generator().write(*$2);
 
     }
     | fordeclar forend
@@ -558,7 +566,9 @@ int compile(const char* in_file, const char* out_file)
     std::ofstream outstream;
     outstream.open(out_file);
 
-    outstream << "(TEST)" << std::endl;
+    const std::string code = compiler.get_asm_generator().get_generated_code();
+
+    outstream << code << std::endl;
 
     return ret;
 }

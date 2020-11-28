@@ -113,6 +113,21 @@ void Assembler_generator::move_rvalue_to_reg(const Register& x, uint64_t val) no
         asm_inc(x);
 }
 
+std::string Assembler_generator::get_generated_code() const noexcept
+{
+    std::string generated_code = "";
+
+    for (auto const& line: code)
+        generated_code += line;
+
+    return generated_code;
+}
+
+void Assembler_generator::finish_program() noexcept
+{
+    asm_halt();
+}
+
 void Assembler_generator::move_addr_to_reg(const Register& x, const Lvalue& var) noexcept
 {
     if (var.get_type() == Value::VALTYPE_LVALUE_VAR)
@@ -142,4 +157,79 @@ void Assembler_generator::move_addr_to_reg(const Register& x, const Lvalue& var)
 
         temp.unlock();
     }
+}
+
+void Assembler_generator::load(const Register& x, const Value& val) noexcept
+{
+    if (val.get_type() == Value::VALTYPE_RVALUE)
+        move_rvalue_to_reg(x, dynamic_cast<const Rvalue&>(val).get_value());
+    else
+    {
+        // x := &var or x := &arr[i]
+        move_addr_to_reg(x, dynamic_cast<const Lvalue&>(val));
+
+        // x := *(&var)
+        asm_load(x, x);
+    }
+}
+
+void Assembler_generator::store(const Lvalue& var, const Register& x) noexcept
+{
+    Register& temp = Architecture::get_free_register();
+    temp.lock();
+
+    // temp := &var
+    move_addr_to_reg(temp, var);
+
+    asm_store(x, temp);
+
+    temp.unlock();
+}
+
+void Assembler_generator::read(const Lvalue& var) noexcept
+{
+    Register& ret = Architecture::get_retval_register();
+    ret.lock();
+
+    // ret := &var
+    move_addr_to_reg(ret, var);
+
+    // *ret := scan from stdin
+    asm_get(ret);
+
+    ret.unlock();
+}
+
+void Assembler_generator::write(const Value& val) noexcept
+{
+    Register& ret = Architecture::get_retval_register();
+    ret.lock();
+
+    if (val.get_type() == Value::VALTYPE_RVALUE)
+    {
+        // Alloc new memory for this value (we wont deallocate it), we have 2^64 memory
+        // and this kind of leaks are only possible by writting some values into code like WRITE 10,
+        // so this is safe
+        Architecture::addr_t val_addr = Architecture::alloc(1);
+        move_rvalue_to_reg(ret, val_addr); // x := &memory
+
+        Register& temp = Architecture::get_free_register();
+        temp.lock();
+
+        // temp := val
+        move_rvalue_to_reg(temp, dynamic_cast<const Rvalue&>(val).get_value());
+
+        // *ret = val
+        asm_store(temp, ret);
+
+        temp.unlock();
+    }
+    else
+        // ret := &var
+        move_addr_to_reg(ret, dynamic_cast<const Lvalue&>(val));
+
+    // here ret := &var or ret := &(int){5}, so we can print it
+    asm_put(ret);
+
+    ret.unlock();
 }
