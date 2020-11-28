@@ -253,6 +253,12 @@ command:
         // For sure we have Lvalue (var or array)
         Lvalue* lval = dynamic_cast<Lvalue*>($1);
 
+        // in RetVal Register we have value from expression, so just store it
+        Register& retval = Architecture::get_retval_register();
+        compiler.get_asm_generator().store(*lval, retval);
+
+        retval.unlock();
+
         // after assigment set init flag
         lval->set_init();
     }
@@ -414,6 +420,12 @@ expr:
         pr_dbg("Value expression\n");
 
         assert_initalization($1, 0);
+
+        // load value into retVal registe. Assign will read expr from retVal register
+        Register& retval = Architecture::get_retval_register();
+        retval.lock();
+
+        compiler.get_asm_generator().load(retval, *$1);
     }
     | value YY_ADD value
     {
