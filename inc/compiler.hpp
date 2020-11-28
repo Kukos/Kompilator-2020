@@ -1,25 +1,17 @@
 #ifndef COMPILER_HPP
 #define COMPILER_HPP
 
-#include <map>
-#include <stack>
-
-#include <lvalue.hpp>
-#include <loop.hpp>
+#include <variable_manager.hpp>
+#include <loop_manager.hpp>
 
 class Compiler
 {
 private:
-    std::map<std::string, Lvalue*> variables;
-    std::stack<Loop> stack_loop;
-
+    Variable_manager var_manager;
+    Loop_manager loop_manager;
 public:
-    void declare_variable(Lvalue* val) noexcept;
-    void undeclare_variable(Lvalue* val) noexcept;
-    bool is_variable_declared(const std::string& name) const noexcept;
-    Lvalue* get_variable(const std::string& name) noexcept;
-    void add_loop_to_stack(const Loop& loop) noexcept;
-    Loop get_loop_from_stack() noexcept;
+    Variable_manager& get_var_manager() noexcept { return var_manager; }
+    Loop_manager& get_loop_manager() noexcept { return loop_manager; }
 };
 
 

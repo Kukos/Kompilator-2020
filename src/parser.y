@@ -134,7 +134,7 @@ lvalue:
         assert_declaration(*($1.str), $1.line);
         assert_usage(*($1.str), Value::VALTYPE_LVALUE_VAR, $1.line);
 
-        Lvalue* var = compiler.get_variable(*($1.str));
+        Lvalue* var = compiler.get_var_manager().get_variable(*($1.str));
         $$ = var;
 
         delete $1.str;
@@ -147,8 +147,8 @@ lvalue:
         assert_usage(*($1.str), Value::VALTYPE_LVALUE_ARRAY, $1.line);
         assert_usage(*($3.str), Value::VALTYPE_LVALUE_VAR, $3.line);
 
-        Lvalue* array = compiler.get_variable(*($1.str));
-        Lvalue* var = compiler.get_variable(*($3.str));
+        Lvalue* array = compiler.get_var_manager().get_variable(*($1.str));
+        Lvalue* var = compiler.get_var_manager().get_variable(*($3.str));
 
         // Now we are sure that access is correct we can cast it to array and set var as access point
         dynamic_cast<Lvalue_array*>(array)->set_access_element(var);
@@ -163,7 +163,7 @@ lvalue:
         assert_declaration(*($1.str), $1.line);
         assert_usage(*($1.str), Value::VALTYPE_LVALUE_ARRAY, $1.line);
 
-        Lvalue* array = compiler.get_variable(*($1.str));
+        Lvalue* array = compiler.get_var_manager().get_variable(*($1.str));
         Rvalue* val = new Rvalue($3.val);
 
         // Now we are sure that access is correct we can cast it to array and set val as access point
@@ -183,7 +183,7 @@ vdeclar:
         assert_redeclaration(*($3.str), $3.line);
 
         Lvalue* var = new Lvalue_var(*($3.str), true);
-        compiler.declare_variable(var);
+        compiler.get_var_manager().declare_variable(var);
 
         delete $3.str;
     }
@@ -196,7 +196,7 @@ vdeclar:
             pr_error("BLAD: Zly zakres tablicy %s w linii %" PRIu64 "\n", $3.str->c_str(), $3.line);
 
         Lvalue* var = new Lvalue_array(*($3.str), $5.val, $7.val - $5.val + 1);
-        compiler.declare_variable(var);
+        compiler.get_var_manager().declare_variable(var);
 
         delete $3.str;
     }
@@ -207,7 +207,7 @@ vdeclar:
         assert_redeclaration(*($1.str), $1.line);
 
         Lvalue* var = new Lvalue_var(*($1.str), true);
-        compiler.declare_variable(var);
+        compiler.get_var_manager().declare_variable(var);
 
         delete $1.str;
     }
@@ -221,7 +221,7 @@ vdeclar:
             pr_error("BLAD: Zly zakres tablicy %s w linii %" PRIu64 "\n", $1.str->c_str(), $1.line);
 
         Lvalue* var = new Lvalue_array(*($1.str), $3.val, $5.val - $3.val + 1);
-        compiler.declare_variable(var);
+        compiler.get_var_manager().declare_variable(var);
 
         delete $1.str;
     }
@@ -305,14 +305,14 @@ fordeclar:
 
         // Alloc iterator as a const variable
         Lvalue* var = new Lvalue_var(*($2.str), false);
-        compiler.declare_variable(var);
+        compiler.get_var_manager().declare_variable(var);
 
         // iterator is always inited
         var->set_init();
 
         // TODO!
         Loop loop(var, nullptr, Loop::LOOP_TYPE_FOR_DO);
-        compiler.add_loop_to_stack(loop);
+        compiler.get_loop_manager().add_loop_to_stack(loop);
     }
     | YY_FOR YY_VARIABLE YY_FROM value YY_DOWNTO value YY_DO
     {
@@ -325,22 +325,22 @@ fordeclar:
 
         // Alloc iterator as a const variable
         Lvalue* var = new Lvalue_var(*($2.str), false);
-        compiler.declare_variable(var);
+        compiler.get_var_manager().declare_variable(var);
 
         // iterator is always inited
         var->set_init();
 
         // TODO!
         Loop loop(var, nullptr, Loop::LOOP_TYPE_FOR_DOWNTO);
-        compiler.add_loop_to_stack(loop);
+        compiler.get_loop_manager().add_loop_to_stack(loop);
     }
 ;
 
 forend:
     commands YY_ENDFOR
     {
-        Loop loop = compiler.get_loop_from_stack();
-        compiler.undeclare_variable(loop.get_iterator());
+        Loop loop = compiler.get_loop_manager().get_loop_from_stack();
+        compiler.get_var_manager().undeclare_variable(loop.get_iterator());
     }
 ;
 
@@ -510,19 +510,19 @@ static void yyerror(const char* msg)
 
 static void assert_declaration(const std::string& name, uint64_t line)
 {
-    if (!compiler.is_variable_declared(name))
+    if (!compiler.get_var_manager().is_variable_declared(name))
         pr_error("BLAD: Niezadeklarowana zmienna %s w linii %" PRIu64 "\n", name.c_str(), line);
 }
 
 static void assert_redeclaration(const std::string& name, uint64_t line)
 {
-    if (compiler.is_variable_declared(name))
+    if (compiler.get_var_manager().is_variable_declared(name))
         pr_error("BLAD: Redeklaracja zmiennej %s w linii %" PRIu64 "\n", name.c_str(), line);
 }
 
 static void assert_usage(const std::string& name, Value::valtype_t type, uint64_t line)
 {
-    Lvalue* lval = compiler.get_variable(name);
+    Lvalue* lval = compiler.get_var_manager().get_variable(name);
     if (lval->get_type() != type)
         pr_error("BLAD: Nieprawidlowe uzycie zmiennej %s w linii %" PRIu64 "\n", name.c_str(), line);
 }
