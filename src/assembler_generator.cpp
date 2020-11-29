@@ -251,3 +251,21 @@ void Assembler_generator::add(const Value& val1, const Value& val2) noexcept
 
     // retval will be used in assignment, so dont unlock it now
 }
+
+void Assembler_generator::sub(const Value& val1, const Value& val2) noexcept
+{
+    Register& retval = Architecture::get_retval_register();
+    retval.lock();
+
+    Register& temp = Architecture::get_free_register();
+    temp.lock();
+
+    load(retval, val1); // retval = val1
+    load(temp, val2); // temp = val1
+
+    asm_sub(retval, temp); // retval = retval - temp
+
+    temp.unlock();
+
+    // retval will be used in assignment, so dont unlock it now
+}
