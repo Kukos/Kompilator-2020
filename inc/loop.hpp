@@ -1,6 +1,8 @@
 #ifndef LOOP_HPP
 #define LOOP_HPP
 
+#include <memory>
+
 #include <lvalue.hpp>
 
 class Loop
@@ -15,15 +17,15 @@ public:
     } looptype_t;
 
 private:
-    Lvalue* iterator;
-    Lvalue* counter;
+    std::shared_ptr<Lvalue> iterator;
+    std::shared_ptr<Lvalue> counter;
     looptype_t type;
 
 public:
-    Loop(Lvalue* iterator, Lvalue* counter, looptype_t type) noexcept;
+    Loop(const std::shared_ptr<Lvalue>& iterator, const std::shared_ptr<Lvalue>& counter, looptype_t type) noexcept;
 
-    Lvalue* get_iterator() const noexcept { return iterator; }
-    Lvalue* get_counter() const noexcept { return counter; }
+    std::shared_ptr<Lvalue> get_iterator() const noexcept { return iterator; }
+    std::shared_ptr<Lvalue> get_counter() const noexcept { return counter; }
     looptype_t get_type() const noexcept { return type; }
 };
 

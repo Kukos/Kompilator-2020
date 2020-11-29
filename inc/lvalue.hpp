@@ -15,6 +15,7 @@ public:
     /* I need a virtual default desctructor, I need also apply rule of 5 */
     Lvalue() noexcept;
     Lvalue(const std::string& name, bool mutuable, Value::valtype_t type) noexcept;
+    Lvalue(const std::string& name, bool mutuable, Value::valtype_t type, Architecture::addr_t addr) noexcept;
     virtual ~Lvalue() = default;
     Lvalue(const Lvalue& from) = default;
     Lvalue& operator=(const Lvalue& from) = default;

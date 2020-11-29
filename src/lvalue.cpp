@@ -11,3 +11,9 @@ Lvalue::Lvalue(const std::string& name, bool mutuable, Value::valtype_t type) no
 {
 
 }
+
+Lvalue::Lvalue(const std::string& name, bool mutuable, Value::valtype_t type, Architecture::addr_t addr) noexcept
+: Value(type), name{name}, init{false}, mutuable{mutuable}, addr{addr}
+{
+
+}

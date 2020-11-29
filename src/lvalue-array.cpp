@@ -5,3 +5,9 @@ Lvalue_array::Lvalue_array(const std::string& name, Architecture::addr_t offset,
 {
 
 }
+
+Lvalue_array::Lvalue_array(const Lvalue_array& arr) noexcept
+: Lvalue(arr.get_name(), arr.is_mutuable(), arr.get_type(), arr.get_addr()), offset{arr.get_access_offset()}, size{arr.get_size()}
+{
+
+}

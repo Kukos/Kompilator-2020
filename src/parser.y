@@ -24,6 +24,7 @@ static void assert_redeclaration(const std::string& name, uint64_t line);
 static void assert_usage(const std::string& name, Value::valtype_t type, uint64_t line);
 static void assert_initalization(Value *val, uint64_t line);
 static void assert_mutuable(Value *val, uint64_t line);
+static void init_variable(Value* val);
 
 extern FILE *yyin;
 
@@ -138,8 +139,8 @@ lvalue:
         assert_declaration(*($1.str), $1.line);
         assert_usage(*($1.str), Value::VALTYPE_LVALUE_VAR, $1.line);
 
-        Lvalue* var = compiler.get_var_manager().get_variable(*($1.str));
-        $$ = var;
+        Lvalue_var* var = dynamic_cast<Lvalue_var*>(compiler.get_var_manager().get_variable(*($1.str)).get());
+        $$ = new Lvalue_var(*var);
 
         delete $1.str;
     }
@@ -151,13 +152,12 @@ lvalue:
         assert_usage(*($1.str), Value::VALTYPE_LVALUE_ARRAY, $1.line);
         assert_usage(*($3.str), Value::VALTYPE_LVALUE_VAR, $3.line);
 
-        Lvalue* array = compiler.get_var_manager().get_variable(*($1.str));
-        Lvalue* var = compiler.get_var_manager().get_variable(*($3.str));
+        Lvalue_array* array = dynamic_cast<Lvalue_array*>(compiler.get_var_manager().get_variable(*($1.str)).get());
+        auto var = compiler.get_var_manager().get_variable(*($3.str));
 
-        // Now we are sure that access is correct we can cast it to array and set var as access point
-        dynamic_cast<Lvalue_array*>(array)->set_access_element(var);
-
-        $$ = array;
+        Lvalue_array* forward = new Lvalue_array(*array);
+        forward->set_access_element(var);
+        $$ = forward;
 
         delete $1.str;
         delete $3.str;
@@ -167,13 +167,12 @@ lvalue:
         assert_declaration(*($1.str), $1.line);
         assert_usage(*($1.str), Value::VALTYPE_LVALUE_ARRAY, $1.line);
 
-        Lvalue* array = compiler.get_var_manager().get_variable(*($1.str));
-        Rvalue* val = new Rvalue($3.val);
+        Lvalue_array* array = dynamic_cast<Lvalue_array*>(compiler.get_var_manager().get_variable(*($1.str)).get());
+        auto val = std::shared_ptr<Value>(new Rvalue($3.val));
 
-        // Now we are sure that access is correct we can cast it to array and set val as access point
-        dynamic_cast<Lvalue_array*>(array)->set_access_element(val);
-
-        $$ = array;
+        Lvalue_array* forward =  new Lvalue_array(*array);
+        forward->set_access_element(val);
+        $$ = forward;
 
         delete $1.str;
     }
@@ -260,7 +259,9 @@ command:
         retval.unlock();
 
         // after assigment set init flag
-        lval->set_init();
+        init_variable($1);
+
+        delete $1;
     }
     | YY_READ lvalue YY_SEMICOLON
     {
@@ -274,7 +275,9 @@ command:
         compiler.get_asm_generator().read(*lval);
 
         // after assigment set init flag
-        lval->set_init();
+        init_variable($2);
+
+        delete $2;
     }
     | YY_WRITE value YY_SEMICOLON
     {
@@ -284,6 +287,8 @@ command:
 
        compiler.get_asm_generator().write(*$2);
 
+        // Pointer to temporary Value is no needed anymore
+        delete $2;
     }
     | fordeclar forend
     {
@@ -322,11 +327,18 @@ fordeclar:
         compiler.get_var_manager().declare_variable(var);
 
         // iterator is always inited
-        var->set_init();
+        init_variable(var);
 
         // TODO!
-        Loop loop(var, nullptr, Loop::LOOP_TYPE_FOR_DO);
+        std::shared_ptr<Lvalue> dummy;
+        Loop loop(compiler.get_var_manager().get_variable(var->get_name()), dummy, Loop::LOOP_TYPE_FOR_DO);
         compiler.get_loop_manager().add_loop_to_stack(loop);
+
+        delete $2.str;
+
+        // Pointer to temporary Value is no needed anymore
+        delete $4;
+        delete $6;
     }
     | YY_FOR YY_VARIABLE YY_FROM value YY_DOWNTO value YY_DO
     {
@@ -342,11 +354,18 @@ fordeclar:
         compiler.get_var_manager().declare_variable(var);
 
         // iterator is always inited
-        var->set_init();
+        init_variable(var);
 
         // TODO!
-        Loop loop(var, nullptr, Loop::LOOP_TYPE_FOR_DOWNTO);
+        std::shared_ptr<Lvalue> dummy;
+        Loop loop(compiler.get_var_manager().get_variable(var->get_name()), dummy, Loop::LOOP_TYPE_FOR_DOWNTO);
         compiler.get_loop_manager().add_loop_to_stack(loop);
+
+        delete $2.str;
+
+        // Pointer to temporary Value is no needed anymore
+        delete $4;
+        delete $6;
     }
 ;
 
@@ -354,7 +373,7 @@ forend:
     commands YY_ENDFOR
     {
         Loop loop = compiler.get_loop_manager().get_loop_from_stack();
-        compiler.get_var_manager().undeclare_variable(loop.get_iterator());
+        compiler.get_var_manager().undeclare_variable(loop.get_iterator().get());
     }
 ;
 
@@ -426,6 +445,9 @@ expr:
         retval.lock();
 
         compiler.get_asm_generator().load(retval, *$1);
+
+        // Pointer to temporary Value is no needed anymore
+        delete $1;
     }
     | value YY_ADD value
     {
@@ -433,6 +455,10 @@ expr:
 
         assert_initalization($1, $2.line);
         assert_initalization($3, $2.line);
+
+        // Pointer to temporary Value is no needed anymore
+        delete $1;
+        delete $3;
     }
     | value YY_SUB value
     {
@@ -440,6 +466,10 @@ expr:
 
         assert_initalization($1, $2.line);
         assert_initalization($3, $2.line);
+
+        // Pointer to temporary Value is no needed anymore
+        delete $1;
+        delete $3;
     }
     | value YY_MUL value
     {
@@ -447,6 +477,10 @@ expr:
 
         assert_initalization($1, $2.line);
         assert_initalization($3, $2.line);
+
+        // Pointer to temporary Value is no needed anymore
+        delete $1;
+        delete $3;
     }
     | value YY_DIV value
     {
@@ -454,6 +488,10 @@ expr:
 
         assert_initalization($1, $2.line);
         assert_initalization($3, $2.line);
+
+        // Pointer to temporary Value is no needed anymore
+        delete $1;
+        delete $3;
     }
     | value YY_MOD value
     {
@@ -461,6 +499,10 @@ expr:
 
         assert_initalization($1, $2.line);
         assert_initalization($3, $2.line);
+
+        // Pointer to temporary Value is no needed anymore
+        delete $1;
+        delete $3;
     }
 ;
 
@@ -471,6 +513,10 @@ cond:
 
         assert_initalization($1, $2.line);
         assert_initalization($3, $2.line);
+
+        // Pointer to temporary Value is no needed anymore
+        delete $1;
+        delete $3;
     }
     | value YY_NE value
     {
@@ -478,6 +524,10 @@ cond:
 
         assert_initalization($1, $2.line);
         assert_initalization($3, $2.line);
+
+        // Pointer to temporary Value is no needed anymore
+        delete $1;
+        delete $3;
     }
     | value YY_LT value
     {
@@ -485,6 +535,10 @@ cond:
 
         assert_initalization($1, $2.line);
         assert_initalization($3, $2.line);
+
+        // Pointer to temporary Value is no needed anymore
+        delete $1;
+        delete $3;
     }
     | value YY_LE value
     {
@@ -492,6 +546,10 @@ cond:
 
         assert_initalization($1, $2.line);
         assert_initalization($3, $2.line);
+
+        // Pointer to temporary Value is no needed anymore
+        delete $1;
+        delete $3;
     }
     | value YY_GT value
     {
@@ -499,6 +557,10 @@ cond:
 
         assert_initalization($1, $2.line);
         assert_initalization($3, $2.line);
+
+        // Pointer to temporary Value is no needed anymore
+        delete $1;
+        delete $3;
     }
     | value YY_GE value
     {
@@ -506,6 +568,10 @@ cond:
 
         assert_initalization($1, $2.line);
         assert_initalization($3, $2.line);
+
+        // Pointer to temporary Value is no needed anymore
+        delete $1;
+        delete $3;
     }
 ;
 
@@ -542,7 +608,7 @@ static void assert_redeclaration(const std::string& name, uint64_t line)
 
 static void assert_usage(const std::string& name, Value::valtype_t type, uint64_t line)
 {
-    Lvalue* lval = compiler.get_var_manager().get_variable(name);
+    Lvalue* lval = compiler.get_var_manager().get_variable(name).get();
     if (lval->get_type() != type)
         pr_error("BLAD: Nieprawidlowe uzycie zmiennej %s w linii %" PRIu64 "\n", name.c_str(), line);
 }
@@ -552,7 +618,7 @@ static void assert_initalization(Value *val, uint64_t line)
     // check if variable has been inited, Rval and Arrays are always inited
     if (val->get_type() == Value::VALTYPE_LVALUE_VAR)
     {
-        Lvalue* lval = dynamic_cast<Lvalue*>(val);
+        Lvalue* lval = compiler.get_var_manager().get_variable(dynamic_cast<Lvalue*>(val)->get_name()).get();
         if (!lval->is_init())
             pr_error("BLAD: Uzycie zmiennej %s bez inicjalizacji w linii %" PRIu64 "\n", lval->get_name().c_str(), line);
     }
@@ -563,9 +629,18 @@ static void assert_mutuable(Value *val, uint64_t line)
     // check if variable can be modyfied, Rval and Arrays cannot be by gramma rules, so there is no need to check it here
     if (val->get_type() == Value::VALTYPE_LVALUE_VAR)
     {
-        Lvalue* lval = dynamic_cast<Lvalue*>(val);
+        Lvalue* lval = compiler.get_var_manager().get_variable(dynamic_cast<Lvalue*>(val)->get_name()).get();
         if (!lval->is_mutuable())
             pr_error("BLAD: Proba nadpisania zmiennej %s typu const w linii %" PRIu64 "\n", lval->get_name().c_str(), line);
+    }
+}
+
+static void init_variable(Value* val)
+{
+    if (val->get_type() == Value::VALTYPE_LVALUE_VAR)
+    {
+        Lvalue* lval = compiler.get_var_manager().get_variable(dynamic_cast<Lvalue*>(val)->get_name()).get();
+        lval->set_init();
     }
 }
 
