@@ -486,6 +486,8 @@ expr:
         compiler.assert_initalization($1, $2.line);
         compiler.assert_initalization($3, $2.line);
 
+        compiler.get_asm_generator().div(*$1, *$3);
+
         // Pointer to temporary Value is no needed anymore
         delete $1;
         delete $3;
