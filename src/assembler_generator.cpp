@@ -269,3 +269,35 @@ void Assembler_generator::sub(const Value& val1, const Value& val2) noexcept
 
     // retval will be used in assignment, so dont unlock it now
 }
+
+void Assembler_generator::mul(const Value& val1, const Value& val2) noexcept
+{
+    Register& retval = Architecture::get_retval_register();
+    retval.lock();
+
+    Register& temp1 = Architecture::get_free_register();
+    temp1.lock();
+    load(temp1, val1);
+
+    Register& temp2 = Architecture::get_free_register();
+    temp2.lock();
+    load(temp2, val2);
+
+    // Peasant Multiplication
+    asm_reset(retval);
+    asm_jzero(temp1, 8); // jump to the end, retval = 0
+    asm_jzero(temp2, 7); // jump to the end, retval = 0
+
+    asm_jodd(temp2, 4);
+    asm_shl(temp1);
+    asm_shr(temp2);
+    asm_jump(-4);
+
+    asm_add(retval, temp1);
+    asm_jump(-4);
+
+    temp1.unlock();
+    temp2.unlock();
+
+    // retval will be used in assignment, so dont unlock it now
+}
