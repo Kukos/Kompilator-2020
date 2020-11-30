@@ -588,6 +588,7 @@ int compile(const char* in_file, const char* out_file)
     std::ofstream outstream;
     outstream.open(out_file);
 
+    compiler.get_asm_generator().finish_code_generation();
     const std::string code = compiler.get_asm_generator().get_generated_code();
 
     outstream << code << std::endl;
