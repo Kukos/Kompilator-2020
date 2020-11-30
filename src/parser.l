@@ -1,5 +1,7 @@
 %{
 
+#define YY_NO_UNPUT
+
 #include <parser_tab.h>
 #include <cstdint>
 #include <cstdio>
