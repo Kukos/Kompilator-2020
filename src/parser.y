@@ -41,6 +41,8 @@ static Compiler compiler;
     #include <lvalue.hpp>
     #include <lvalue-var.hpp>
     #include <lvalue-array.hpp>
+    #include <loop.hpp>
+    #include <loop-for.hpp>
 
     typedef struct Parser_token
     {
@@ -330,11 +332,11 @@ fordeclar:
         const std::string label_start = compiler.get_asm_generator().get_label_manager().create_label("FOR_START");
         const std::string label_end = compiler.get_asm_generator().get_label_manager().create_label("FOR_END");
 
-        Loop loop(compiler.get_var_manager().get_variable(iterator->get_name()),
-                  compiler.get_var_manager().get_variable(counter->get_name()),
-                  label_start,
-                  label_end,
-                  Loop::LOOP_TYPE_FOR_DO);
+        Loop* loop = new Loop_for(compiler.get_var_manager().get_variable(iterator->get_name()),
+                                  compiler.get_var_manager().get_variable(counter->get_name()),
+                                  label_start,
+                                  label_end,
+                                  Loop::LOOP_TYPE_FOR_DO);
 
         compiler.get_loop_manager().add_loop_to_stack(loop);
 
@@ -350,7 +352,7 @@ fordeclar:
 
         retval.unlock();
 
-        compiler.get_asm_generator().start_for_loop(loop);
+        compiler.get_asm_generator().start_for_loop(*dynamic_cast<Loop_for*>(loop));
 
         delete $2.str;
 
@@ -360,7 +362,7 @@ fordeclar:
     }
     | YY_FOR YY_VARIABLE YY_FROM value YY_DOWNTO value YY_DO
     {
-       compiler.assert_initalization($4, $1.line);
+        compiler.assert_initalization($4, $1.line);
         compiler.assert_initalization($6, $1.line);
 
         compiler.assert_redeclaration(*($2.str), $1.line);
@@ -382,11 +384,11 @@ fordeclar:
         const std::string label_start = compiler.get_asm_generator().get_label_manager().create_label("FOR_START");
         const std::string label_end = compiler.get_asm_generator().get_label_manager().create_label("FOR_END");
 
-        Loop loop(compiler.get_var_manager().get_variable(iterator->get_name()),
-                  compiler.get_var_manager().get_variable(counter->get_name()),
-                  label_start,
-                  label_end,
-                  Loop::LOOP_TYPE_FOR_DOWNTO);
+        Loop* loop = new Loop_for(compiler.get_var_manager().get_variable(iterator->get_name()),
+                                  compiler.get_var_manager().get_variable(counter->get_name()),
+                                  label_start,
+                                  label_end,
+                                  Loop::LOOP_TYPE_FOR_DOWNTO);
 
         compiler.get_loop_manager().add_loop_to_stack(loop);
 
@@ -402,7 +404,7 @@ fordeclar:
 
         retval.unlock();
 
-        compiler.get_asm_generator().start_for_loop(loop);
+        compiler.get_asm_generator().start_for_loop(*dynamic_cast<Loop_for*>(loop));
 
         delete $2.str;
 
@@ -415,12 +417,14 @@ fordeclar:
 forend:
     commands YY_ENDFOR
     {
-        Loop loop = compiler.get_loop_manager().get_loop_from_stack();
+        Loop_for* loop = dynamic_cast<Loop_for*>(compiler.get_loop_manager().get_loop_from_stack());
 
-        compiler.get_asm_generator().do_for_loop(loop);
+        compiler.get_asm_generator().do_for_loop(*loop);
 
-        compiler.get_var_manager().undeclare_variable(loop.get_iterator().get());
-        compiler.get_var_manager().undeclare_variable(loop.get_counter().get());
+        compiler.get_var_manager().undeclare_variable(loop->get_iterator().get());
+        compiler.get_var_manager().undeclare_variable(loop->get_counter().get());
+
+        delete loop;
     }
 ;
 

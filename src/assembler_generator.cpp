@@ -709,7 +709,7 @@ void Assembler_generator::calculate_for_iterations(const Value& from, const Valu
     // retval will be used in assignment, so dont unlock it now
 }
 
-void Assembler_generator::start_for_loop(const Loop& loop) noexcept
+void Assembler_generator::start_for_loop(const Loop_for& loop) noexcept
 {
     label_manager.insert_label(loop.get_start_label());
 
@@ -722,7 +722,7 @@ void Assembler_generator::start_for_loop(const Loop& loop) noexcept
     temp.unlock();
 }
 
-void Assembler_generator::do_for_loop(const Loop& loop) noexcept
+void Assembler_generator::do_for_loop(const Loop_for& loop) noexcept
 {
     Register& temp = Architecture::get_free_register();
     temp.lock();

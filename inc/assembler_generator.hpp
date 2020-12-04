@@ -11,6 +11,7 @@
 #include <register.hpp>
 #include <architecture.hpp>
 #include <loop.hpp>
+#include <loop-for.hpp>
 
 class Assembler_generator
 {
@@ -92,8 +93,8 @@ public:
     // Iteration = (to + 1) - from Result will be in retval register
     void calculate_for_iterations(const Value& from, const Value& to) noexcept;
 
-    void start_for_loop(const Loop& loop) noexcept;
-    void do_for_loop(const Loop& loop) noexcept;
+    void start_for_loop(const Loop_for& loop) noexcept;
+    void do_for_loop(const Loop_for& loop) noexcept;
 
     void finish_program() noexcept;
 
