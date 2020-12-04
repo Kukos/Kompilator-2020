@@ -546,3 +546,145 @@ void Assembler_generator::div(const Value& val1, const Value& val2) noexcept
     delete clone_val1;
     delete clone_val2;
 }
+
+// Algo adopted from this presentation: https://www.cs.utah.edu/~rajeev/cs3810/slides/3810-08.pdf?fbclid=IwAR3QdWK4L9jG6xY_MkhvlxdzxYalvqHXrP5zP63OoNQ0XkTHGzcQUOkijg0
+void Assembler_generator::mod(const Value& val1, const Value& val2) noexcept
+{
+    // PREPARATION PHASE
+    // Alloc 2 variables (clone of val1 and val2) to make reload easier (1 reg instead of 2 in case of array)
+    Lvalue* clone_val1 = new Lvalue_var("clone1", true);
+    clone_val1->set_addr(Architecture::alloc(1));
+
+    Lvalue* clone_val2 = new Lvalue_var("clone2", true);
+    clone_val2->set_addr(Architecture::alloc(1));
+
+    // Copy val1 to clone_val1 and val2_to clone_val2
+    Register& temp1 = Architecture::get_free_register();
+    temp1.lock();
+
+    load(temp1, val1);
+    store(*clone_val1, temp1);
+
+    Register& temp2 = Architecture::get_free_register();
+    temp2.lock();
+
+    load(temp2, val2);
+    store(*clone_val2, temp2);
+
+    // get temp3 as temp1 (val1) and temp4 as temp1 (val2)
+    Register& temp3 = Architecture::get_free_register();
+    temp3.lock();
+
+    load(temp3, *clone_val1);
+
+    Register& temp4 = Architecture::get_free_register();
+    temp4.lock();
+
+    load(temp4, *clone_val2);
+    // Now: temp1 = temp3 = val1, temp2 = temp4 = val2
+
+    Register& retval = Architecture::get_retval_register();
+    retval.lock();
+
+    // CHECK PHASE
+    // 0 % 0 -> 0, a % 0 -> 0, 0 % b -> 0
+    // a % b -> 0
+    // a % b -> a if a < b
+
+    const std::string label_end = label_manager.create_label("MOD_END");
+    const std::string label_ret0 = label_manager.create_label("MOD_RETURN_0");
+    const std::string label_reta = label_manager.create_label("MOD_RETURN_a");
+    const std::string label_start_algo = label_manager.create_label("MOD_START_ALGO");
+
+    // return 0
+    asm_jzero_label(temp1, label_ret0);
+    asm_jzero_label(temp2, label_ret0);
+
+    // max{a - b, 0} + max{b - a, 0} == 0 iff a == b. But we know that a != 0 && b & 0 so return 0
+    asm_sub(temp1, temp2);
+    asm_sub(temp2, temp3);
+    asm_add(temp1, temp2);
+    asm_jzero_label(temp1, label_ret0);
+
+    // a < b -> a != b && a - b == 0. We know that a != 0, so a < b. Return a
+    asm_sub(temp3, temp4);
+    asm_jzero_label(temp3, label_reta);
+    asm_jump_label(label_start_algo);
+
+    label_manager.insert_label(label_ret0);
+    asm_reset(retval);
+    asm_jump_label(label_end);
+    label_manager.insert_label(label_reta);
+    load(retval, *clone_val1);
+    asm_jump_label(label_end);
+
+    // we dont need temp4 anymore
+    temp4.unlock();
+
+    // MAIN ALGO PHASE
+    // Check Phase destroys a and b in registers we need to reload this
+    const std::string label_count_0 = label_manager.create_label("MOD_COUNT_0");
+    const std::string label_reload_b = label_manager.create_label("MOD_RELOAD_B");
+    const std::string label_add_0 = label_manager.create_label("MOD_ADD_0");
+    const std::string label_finish_add_0 = label_manager.create_label("MOD_FINISH_ADD_0");
+    const std::string label_loop = label_manager.create_label("MOD_COUNT_LOOP");
+    const std::string label_b_gt = label_manager.create_label("MOD_B_IS_GREATER");
+
+    label_manager.insert_label(label_start_algo);
+    load(retval, *clone_val1);
+    load(temp2, *clone_val2);
+
+    move_rvalue_to_reg(temp1, 0);
+    move_rvalue_to_reg(temp3, 1);
+
+    label_manager.insert_label(label_count_0);
+    asm_jzero_label(temp2, label_reload_b);
+    asm_shr(temp2);
+    asm_shr(retval);
+    asm_jump_label(label_count_0);
+
+    label_manager.insert_label(label_reload_b);
+    load(temp2, *clone_val2); // we have broken "b" in temp2 but we need fresh "b" -> reload
+
+    label_manager.insert_label(label_add_0);
+    asm_jzero_label(retval, label_finish_add_0);
+    asm_shr(retval);
+    asm_shl(temp2);
+    asm_inc(temp3);
+    asm_jump_label(label_add_0);
+
+    label_manager.insert_label(label_finish_add_0);
+    load(retval, *clone_val1); // as above here we used "a" to calculate temp3 (counter). Reload fresh "a"
+
+    // MAIN DIV LOOP
+    label_manager.insert_label(label_loop);
+    asm_jzero_label(temp3, label_end);
+    asm_inc(retval);
+    asm_sub(retval, temp2);
+    asm_jzero_label(retval, label_b_gt);
+    asm_dec(retval);
+    asm_dec(temp3);
+    asm_shl(temp1);
+    asm_inc(temp1);
+    asm_shr(temp2);
+
+    // store current value in memory, we need current value in reg and prev value in memory
+    store(*clone_val1, retval);
+    asm_jump_label(label_loop);
+
+    label_manager.insert_label(label_b_gt);
+    load(retval, *clone_val1); // get prev value of "a"
+    asm_shl(temp1);
+    asm_dec(temp3);
+    asm_shr(temp2);
+    asm_jump_label(label_loop);
+
+    label_manager.insert_label(label_end);
+
+    temp1.unlock();
+    temp2.unlock();
+    temp3.unlock();
+
+    delete clone_val1;
+    delete clone_val2;
+}

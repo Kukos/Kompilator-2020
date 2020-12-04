@@ -86,6 +86,7 @@ public:
     void sub(const Value& val1, const Value& val2) noexcept;
     void mul(const Value& val1, const Value& val2) noexcept;
     void div(const Value& val1, const Value& val2) noexcept;
+    void mod(const Value& val1, const Value& val2) noexcept;
 
     void finish_program() noexcept;
 
