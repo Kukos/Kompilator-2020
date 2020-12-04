@@ -10,10 +10,11 @@
 #include <lvalue.hpp>
 #include <register.hpp>
 #include <architecture.hpp>
+#include <loop.hpp>
 
 class Assembler_generator
 {
-private:
+public:
     // nested class to manage labels in jumps
     class Label_manager
     {
@@ -88,6 +89,12 @@ public:
     void div(const Value& val1, const Value& val2) noexcept;
     void mod(const Value& val1, const Value& val2) noexcept;
 
+    // Iteration = (to + 1) - from Result will be in retval register
+    void calculate_for_iterations(const Value& from, const Value& to) noexcept;
+
+    void start_for_loop(const Loop& loop) noexcept;
+    void do_for_loop(const Loop& loop) noexcept;
+
     void finish_program() noexcept;
 
     // finish generation, create final code based on some metadata like data from label_manager
@@ -95,6 +102,9 @@ public:
 
     // get code in 1 string
     std::string get_generated_code() const noexcept;
+
+    // get Label manager to create lables from another class like parser
+    Assembler_generator::Label_manager& get_label_manager() noexcept { return label_manager; };
 };
 
 #endif

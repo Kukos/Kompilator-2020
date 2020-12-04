@@ -688,3 +688,62 @@ void Assembler_generator::mod(const Value& val1, const Value& val2) noexcept
     delete clone_val1;
     delete clone_val2;
 }
+
+void Assembler_generator::calculate_for_iterations(const Value& from, const Value& to) noexcept
+{
+    Register& retval = Architecture::get_retval_register();
+    retval.lock();
+
+    Register& temp = Architecture::get_free_register();
+    temp.lock();
+
+    load(retval, to);
+    load(temp, from);
+
+    asm_inc(retval);
+
+    asm_sub(retval, temp);
+
+    temp.unlock();
+
+    // retval will be used in assignment, so dont unlock it now
+}
+
+void Assembler_generator::start_for_loop(const Loop& loop) noexcept
+{
+    label_manager.insert_label(loop.get_start_label());
+
+    Register& temp = Architecture::get_free_register();
+    temp.lock();
+
+    load(temp, *loop.get_counter().get());
+    asm_jzero_label(temp, loop.get_end_label());
+
+    temp.unlock();
+}
+
+void Assembler_generator::do_for_loop(const Loop& loop) noexcept
+{
+    Register& temp = Architecture::get_free_register();
+    temp.lock();
+
+    // counter--
+    load(temp, *loop.get_counter().get());
+    asm_dec(temp);
+    store(*loop.get_counter().get(), temp);
+
+    // iterator++ or --
+    load(temp, *loop.get_iterator().get());
+    if (loop.get_type() == Loop::LOOP_TYPE_FOR_DO)
+        asm_inc(temp);
+    else
+        asm_dec(temp);
+
+    store(*loop.get_iterator().get(), temp);
+
+    asm_jump_label(loop.get_start_label());
+
+    label_manager.insert_label(loop.get_end_label());
+
+    temp.unlock();
+}

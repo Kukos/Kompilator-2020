@@ -314,16 +314,43 @@ fordeclar:
         compiler.assert_redeclaration(*($2.str), $1.line);
 
         // Alloc iterator as a const variable
-        Lvalue* var = new Lvalue_var(*($2.str), false);
-        compiler.get_var_manager().declare_variable(var);
+        Lvalue* iterator = new Lvalue_var(*($2.str), false);
+        compiler.get_var_manager().declare_variable(iterator);
 
         // iterator is always inited
-        compiler.init_variable(var);
+        compiler.init_variable(iterator);
 
-        // TODO!
-        std::shared_ptr<Lvalue> dummy;
-        Loop loop(compiler.get_var_manager().get_variable(var->get_name()), dummy, Loop::LOOP_TYPE_FOR_DO);
+        // Alloc loop counter as const variable. we add _ to the name so this name will be incorrect according to gramma
+        // which is safe, because nobody declare this variable as a normal variable in code
+
+        Lvalue* counter = new Lvalue_var("_" + *($2.str), false);
+        compiler.get_var_manager().declare_variable(counter);
+
+        // Create label to jump from and jump to
+        const std::string label_start = compiler.get_asm_generator().get_label_manager().create_label("FOR_START");
+        const std::string label_end = compiler.get_asm_generator().get_label_manager().create_label("FOR_END");
+
+        Loop loop(compiler.get_var_manager().get_variable(iterator->get_name()),
+                  compiler.get_var_manager().get_variable(counter->get_name()),
+                  label_start,
+                  label_end,
+                  Loop::LOOP_TYPE_FOR_DO);
+
         compiler.get_loop_manager().add_loop_to_stack(loop);
+
+        // Calculate number of iterations. Counter := (TO + 1) - FROM
+        compiler.get_asm_generator().calculate_for_iterations(*$4, *$6);
+
+        Register& retval = Architecture::get_retval_register();
+        compiler.get_asm_generator().store(*counter, retval);
+
+        // Set iterator
+        compiler.get_asm_generator().load(retval, *$4);
+        compiler.get_asm_generator().store(*iterator, retval);
+
+        retval.unlock();
+
+        compiler.get_asm_generator().start_for_loop(loop);
 
         delete $2.str;
 
@@ -333,24 +360,49 @@ fordeclar:
     }
     | YY_FOR YY_VARIABLE YY_FROM value YY_DOWNTO value YY_DO
     {
-        pr_dbg("For DOWNTO\n");
-
-        compiler.assert_initalization($4, $1.line);
+       compiler.assert_initalization($4, $1.line);
         compiler.assert_initalization($6, $1.line);
 
         compiler.assert_redeclaration(*($2.str), $1.line);
 
         // Alloc iterator as a const variable
-        Lvalue* var = new Lvalue_var(*($2.str), false);
-        compiler.get_var_manager().declare_variable(var);
+        Lvalue* iterator = new Lvalue_var(*($2.str), false);
+        compiler.get_var_manager().declare_variable(iterator);
 
         // iterator is always inited
-        compiler.init_variable(var);
+        compiler.init_variable(iterator);
 
-        // TODO!
-        std::shared_ptr<Lvalue> dummy;
-        Loop loop(compiler.get_var_manager().get_variable(var->get_name()), dummy, Loop::LOOP_TYPE_FOR_DOWNTO);
+        // Alloc loop counter as const variable. we add _ to the name so this name will be incorrect according to gramma
+        // which is safe, because nobody declare this variable as a normal variable in code
+
+        Lvalue* counter = new Lvalue_var("_" + *($2.str), false);
+        compiler.get_var_manager().declare_variable(counter);
+
+        // Create label to jump from and jump to
+        const std::string label_start = compiler.get_asm_generator().get_label_manager().create_label("FOR_START");
+        const std::string label_end = compiler.get_asm_generator().get_label_manager().create_label("FOR_END");
+
+        Loop loop(compiler.get_var_manager().get_variable(iterator->get_name()),
+                  compiler.get_var_manager().get_variable(counter->get_name()),
+                  label_start,
+                  label_end,
+                  Loop::LOOP_TYPE_FOR_DOWNTO);
+
         compiler.get_loop_manager().add_loop_to_stack(loop);
+
+        // Calculate number of iterations. Counter := (FROM + 1) - TO
+        compiler.get_asm_generator().calculate_for_iterations(*$6, *$4);
+
+        Register& retval = Architecture::get_retval_register();
+        compiler.get_asm_generator().store(*counter, retval);
+
+        // Set iterator
+        compiler.get_asm_generator().load(retval, *$4);
+        compiler.get_asm_generator().store(*iterator, retval);
+
+        retval.unlock();
+
+        compiler.get_asm_generator().start_for_loop(loop);
 
         delete $2.str;
 
@@ -364,7 +416,11 @@ forend:
     commands YY_ENDFOR
     {
         Loop loop = compiler.get_loop_manager().get_loop_from_stack();
+
+        compiler.get_asm_generator().do_for_loop(loop);
+
         compiler.get_var_manager().undeclare_variable(loop.get_iterator().get());
+        compiler.get_var_manager().undeclare_variable(loop.get_counter().get());
     }
 ;
 

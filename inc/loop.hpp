@@ -19,13 +19,17 @@ public:
 private:
     std::shared_ptr<Lvalue> iterator;
     std::shared_ptr<Lvalue> counter;
+    std::string start_label;
+    std::string end_label;
     looptype_t type;
 
 public:
-    Loop(const std::shared_ptr<Lvalue>& iterator, const std::shared_ptr<Lvalue>& counter, looptype_t type) noexcept;
+    Loop(const std::shared_ptr<Lvalue>& iterator, const std::shared_ptr<Lvalue>& counter, const std::string& start_label, const std::string& end_label,  looptype_t type) noexcept;
 
     std::shared_ptr<Lvalue> get_iterator() const noexcept { return iterator; }
     std::shared_ptr<Lvalue> get_counter() const noexcept { return counter; }
+    const std::string& get_start_label() const noexcept { return start_label; }
+    const std::string& get_end_label() const noexcept { return end_label; }
     looptype_t get_type() const noexcept { return type; }
 };
 
