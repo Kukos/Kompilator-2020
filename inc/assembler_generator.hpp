@@ -113,6 +113,9 @@ public:
     void start_until_loop(const Loop_until& loop) noexcept;
     void do_until_loop(const Loop_until& loop) noexcept;
 
+    void if_insert_jump_point(const Conditional_branch& branch) noexcept;
+    void if_skip_else(const Conditional_branch& branch) noexcept;
+
     void finish_program() noexcept;
 
     // finish generation, create final code based on some metadata like data from label_manager

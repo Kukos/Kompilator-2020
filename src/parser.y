@@ -295,7 +295,7 @@ command:
     {
         pr_dbg("Repeat until loop\n");
     }
-    | ifcond ifelse ifend
+    | ifcond ifelse ifend_after_else
     {
         pr_dbg("If then else end\n");
     }
@@ -497,14 +497,37 @@ ifcond:
 ifend:
     commands YY_ENDIF
     {
+        Conditional_branch branch = compiler.get_branch_manager().get_branch_from_stack();
 
+        compiler.get_asm_generator().if_insert_jump_point(branch);
     }
 ;
 
 ifelse:
     commands YY_ELSE
     {
+        // we need to set point to jump from cond false label,
+        // also we need to create jump branch to ommit else code after if
+        Conditional_branch jump_from_if = Conditional_branch(compiler.get_asm_generator().get_label_manager().create_label("jump_after_if"));
+        compiler.get_asm_generator().if_skip_else(jump_from_if);
 
+        Conditional_branch branch = compiler.get_branch_manager().get_branch_from_stack();
+
+        compiler.get_asm_generator().if_insert_jump_point(branch);
+
+        // now we need to add jump_from_if to stack, we wil pop it after else commands to create jump to point
+        compiler.get_branch_manager().add_branch(jump_from_if);
+    }
+;
+
+
+ifend_after_else:
+    commands YY_ENDIF
+    {
+        //after else branch jump is a point to jump from if code to skip else code
+        Conditional_branch branch = compiler.get_branch_manager().get_branch_from_stack();
+
+        compiler.get_asm_generator().if_insert_jump_point(branch);
     }
 ;
 

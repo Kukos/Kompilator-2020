@@ -923,3 +923,13 @@ void Assembler_generator::do_until_loop(const Loop_until& loop) noexcept
 
     label_manager.insert_label(label_end);
 }
+
+void Assembler_generator::if_insert_jump_point(const Conditional_branch& branch) noexcept
+{
+    label_manager.insert_label(branch.get_label_false());
+}
+
+void Assembler_generator::if_skip_else(const Conditional_branch& branch) noexcept
+{
+    asm_jump_label(branch.get_label_false());
+}
