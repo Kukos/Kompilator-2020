@@ -172,7 +172,7 @@ lvalue:
 ;
 
 vdeclar:
-    | vdeclar YY_COMMA YY_VARIABLE
+    vdeclar YY_COMMA YY_VARIABLE
     {
         pr_dbg("Next Variable declaration: %s\n", $3.str->c_str());
 

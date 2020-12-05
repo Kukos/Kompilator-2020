@@ -1,1 +1,1 @@
-BLAD: Proba nadpisania zmiennej i typu const w linii 4
+BLAD: Proba nadpisania zmiennej i typu const w linii 3

@@ -47,7 +47,7 @@ all: compiler vm
 compiler: $(EXEC)
 
 $(SDIR)/parser_tab.c $(IDIR)/parser_tab.h: $(SDIR)/parser.y
-	$(YAC) --debug --defines=$(IDIR)/parser_tab.h $(SDIR)/parser.y -o $(SDIR)/parser_tab.c
+	$(YAC) --debug -Wall --defines=$(IDIR)/parser_tab.h $(SDIR)/parser.y -o $(SDIR)/parser_tab.c
 
 $(SDIR)/parser_lex.yy.c: $(SDIR)/parser.l $(IDIR)/parser_tab.h
 	$(LEX) -o $@ $(SDIR)/parser.l
