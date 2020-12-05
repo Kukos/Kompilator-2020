@@ -431,21 +431,32 @@ forend:
 whiledeclar:
     prewhile cond YY_DO
     {
-
+        // now we can get false label name. False label from cond will be our end label
+        Conditional_branch branch = compiler.get_branch_manager().get_branch_from_stack();
+        compiler.get_loop_manager().get_loop_top_stack()->set_end_label(branch.get_label_false());
     }
 ;
 
 prewhile:
     YY_WHILE
     {
+        const std::string label_start = compiler.get_asm_generator().get_label_manager().create_label("WHILE_START");
 
+        Loop* loop = new Loop_while(label_start, std::string("to_be_defined_later"));
+        compiler.get_loop_manager().add_loop_to_stack(loop);
+
+        compiler.get_asm_generator().start_while_loop(*dynamic_cast<Loop_while*>(loop));
     }
 ;
 
 whileend:
     commands YY_ENDWHILE
     {
+        Loop* loop = compiler.get_loop_manager().get_loop_from_stack();
 
+        compiler.get_asm_generator().do_while_loop(*dynamic_cast<Loop_while*>(loop));
+
+        delete loop;
     }
 ;
 
@@ -575,6 +586,9 @@ cond:
         compiler.assert_initalization($1, $2.line);
         compiler.assert_initalization($3, $2.line);
 
+        Conditional_branch branch = compiler.get_asm_generator().branch_eq(*$1, *$3);
+        compiler.get_branch_manager().add_branch(branch);
+
         // Pointer to temporary Value is no needed anymore
         delete $1;
         delete $3;
@@ -585,6 +599,9 @@ cond:
 
         compiler.assert_initalization($1, $2.line);
         compiler.assert_initalization($3, $2.line);
+
+        Conditional_branch branch = compiler.get_asm_generator().branch_neq(*$1, *$3);
+        compiler.get_branch_manager().add_branch(branch);
 
         // Pointer to temporary Value is no needed anymore
         delete $1;
@@ -597,6 +614,9 @@ cond:
         compiler.assert_initalization($1, $2.line);
         compiler.assert_initalization($3, $2.line);
 
+        Conditional_branch branch = compiler.get_asm_generator().branch_lt(*$1, *$3);
+        compiler.get_branch_manager().add_branch(branch);
+
         // Pointer to temporary Value is no needed anymore
         delete $1;
         delete $3;
@@ -607,6 +627,9 @@ cond:
 
         compiler.assert_initalization($1, $2.line);
         compiler.assert_initalization($3, $2.line);
+
+        Conditional_branch branch = compiler.get_asm_generator().branch_leq(*$1, *$3);
+        compiler.get_branch_manager().add_branch(branch);
 
         // Pointer to temporary Value is no needed anymore
         delete $1;
@@ -619,6 +642,9 @@ cond:
         compiler.assert_initalization($1, $2.line);
         compiler.assert_initalization($3, $2.line);
 
+        Conditional_branch branch = compiler.get_asm_generator().branch_gt(*$1, *$3);
+        compiler.get_branch_manager().add_branch(branch);
+
         // Pointer to temporary Value is no needed anymore
         delete $1;
         delete $3;
@@ -629,6 +655,9 @@ cond:
 
         compiler.assert_initalization($1, $2.line);
         compiler.assert_initalization($3, $2.line);
+
+        Conditional_branch branch = compiler.get_asm_generator().branch_geq(*$1, *$3);
+        compiler.get_branch_manager().add_branch(branch);
 
         // Pointer to temporary Value is no needed anymore
         delete $1;

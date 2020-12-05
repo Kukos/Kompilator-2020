@@ -12,3 +12,8 @@ Loop* Loop_manager::get_loop_from_stack() noexcept
 
     return loop;
 }
+
+Loop* Loop_manager::get_loop_top_stack() noexcept
+{
+    return stack_loop.top();
+}

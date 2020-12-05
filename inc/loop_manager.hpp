@@ -13,6 +13,7 @@ private:
 public:
     void add_loop_to_stack(Loop* loop) noexcept;
     Loop* get_loop_from_stack() noexcept;
+    Loop* get_loop_top_stack() noexcept;
 };
 
 

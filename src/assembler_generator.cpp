@@ -689,6 +689,155 @@ void Assembler_generator::mod(const Value& val1, const Value& val2) noexcept
     delete clone_val2;
 }
 
+Conditional_branch Assembler_generator::branch_eq(const Value& val1, const Value& val2) noexcept
+{
+    const std::string label_true = label_manager.create_label("COND_EQ_TRUE");
+    const std::string label_false = label_manager.create_label("COND_EQ_FALSE");
+    const std::string label_double_check = label_manager.create_label("COND_EQ_DOUBLE_CHECK");
+
+    Register& temp1 = Architecture::get_free_register();
+    temp1.lock();
+
+    Register& temp2 = Architecture::get_free_register();
+    temp2.lock();
+
+    load(temp1, val1);
+    load(temp2, val2);
+
+    // temp1 = max{temp1 - temp2, 0}. So 0 -> temp1 == temp2 or temp2 > temp1
+    // so in case of zero we need to check it again
+    // in case of != 0 it is for sure false
+    asm_sub(temp1, temp2);
+    asm_jzero_label(temp1, label_double_check);
+    asm_jump_label(label_false);
+
+    label_manager.insert_label(label_double_check);
+    // temp1 == temp2 or temp2 > temp1. Reorder sub to check if temp1 > temp2 or temp1 == temp2.
+    // we know that temp1 > temp2 == false.
+    load(temp1, val1);
+    asm_sub(temp2, temp1);
+    asm_jzero_label(temp2, label_true);
+    asm_jump_label(label_false);
+
+    label_manager.insert_label(label_true);
+
+    temp1.unlock();
+    temp2.unlock();
+
+    // Create Branch
+    return Conditional_branch(label_false);
+}
+
+Conditional_branch Assembler_generator::branch_neq(const Value& val1, const Value& val2) noexcept
+{
+    const std::string label_true = label_manager.create_label("COND_NEQ_TRUE");
+    const std::string label_false = label_manager.create_label("COND_NEQ_FALSE");
+    const std::string label_double_check = label_manager.create_label("COND_NEQ_DOUBLE_CHECK");
+
+    Register& temp1 = Architecture::get_free_register();
+    temp1.lock();
+
+    Register& temp2 = Architecture::get_free_register();
+    temp2.lock();
+
+    load(temp1, val1);
+    load(temp2, val2);
+
+    // temp1 = max{temp1 - temp2, 0}. So 0 -> temp1 == temp2 or temp2 > temp1
+    // so in case of zero we need to check it again
+    // in case of != 0 it is for sure true
+    asm_sub(temp1, temp2);
+    asm_jzero_label(temp1, label_double_check);
+    asm_jump_label(label_true);
+
+    label_manager.insert_label(label_double_check);
+    // temp1 == temp2 or temp2 > temp1. Reorder sub to check if temp1 > temp2 or temp1 == temp2.
+    // we know that temp1 > temp2 == false.
+    load(temp1, val1);
+    asm_sub(temp2, temp1);
+    asm_jzero_label(temp2, label_false);
+
+    label_manager.insert_label(label_true);
+
+    temp1.unlock();
+    temp2.unlock();
+
+    // Create Branch
+    return Conditional_branch(label_false);
+}
+
+Conditional_branch Assembler_generator::branch_gt(const Value& val1, const Value& val2) noexcept
+{
+    const std::string label_true = label_manager.create_label("COND_GT_TRUE");
+    const std::string label_false = label_manager.create_label("COND_GT_FALSE");
+
+    Register& temp1 = Architecture::get_free_register();
+    temp1.lock();
+
+    Register& temp2 = Architecture::get_free_register();
+    temp2.lock();
+
+    load(temp1, val1);
+    load(temp2, val2);
+
+    // temp2 = temp2 - temp1. temp2 == 0 <-> temp2 == temp1 or temp1 > temp2.
+    // But Let do this trick. temp2 = (temp2 + 1) - temp1.
+    // temp2 == 0 <-> temp2 == temp1 - 1 or temp2 < temp1 - 1
+    // from 1. case temp1 > temp1 from 2. case temp1 > temp2 + 1 -> temp1 > temp2
+    asm_inc(temp2);
+    asm_sub(temp2, temp1);
+    asm_jzero_label(temp2, label_true);
+    asm_jump_label(label_false);
+
+    label_manager.insert_label(label_true);
+
+    temp1.unlock();
+    temp2.unlock();
+
+    // Create Branch
+    return Conditional_branch(label_false);
+}
+
+Conditional_branch Assembler_generator::branch_lt(const Value& val1, const Value& val2) noexcept
+{
+    // a < b --> b > a
+    return branch_gt(val2, val1);
+}
+
+Conditional_branch Assembler_generator::branch_geq(const Value& val1, const Value& val2) noexcept
+{
+    const std::string label_true = label_manager.create_label("COND_GEQ_TRUE");
+    const std::string label_false = label_manager.create_label("COND_GEQ_FALSE");
+
+    Register& temp1 = Architecture::get_free_register();
+    temp1.lock();
+
+    Register& temp2 = Architecture::get_free_register();
+    temp2.lock();
+
+    load(temp1, val1);
+    load(temp2, val2);
+
+    // temp2 = temp2 - temp1. temp2 == 0 <-> temp1 == temp2 or temp1 > temp1 -> temp1 >= temp2
+    asm_sub(temp2, temp1);
+    asm_jzero_label(temp2, label_true);
+    asm_jump_label(label_false);
+
+    label_manager.insert_label(label_true);
+
+    temp1.unlock();
+    temp2.unlock();
+
+    // Create Branch
+    return Conditional_branch(label_false);
+}
+
+Conditional_branch Assembler_generator::branch_leq(const Value& val1, const Value& val2) noexcept
+{
+    // a <= b --> b >= a
+    return branch_geq(val2, val1);
+}
+
 void Assembler_generator::calculate_for_iterations(const Value& from, const Value& to) noexcept
 {
     Register& retval = Architecture::get_retval_register();
@@ -746,4 +895,14 @@ void Assembler_generator::do_for_loop(const Loop_for& loop) noexcept
     label_manager.insert_label(loop.get_end_label());
 
     temp.unlock();
+}
+
+void Assembler_generator::start_while_loop(const Loop_while& loop) noexcept
+{
+    label_manager.insert_label(loop.get_start_label());
+}
+void Assembler_generator::do_while_loop(const Loop_while& loop) noexcept
+{
+    asm_jump_label(loop.get_start_label());
+    label_manager.insert_label(loop.get_end_label());
 }

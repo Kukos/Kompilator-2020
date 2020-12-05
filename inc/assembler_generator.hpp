@@ -12,6 +12,8 @@
 #include <architecture.hpp>
 #include <loop.hpp>
 #include <loop-for.hpp>
+#include <loop-while.hpp>
+#include <conditional_branch.hpp>
 
 class Assembler_generator
 {
@@ -90,11 +92,22 @@ public:
     void div(const Value& val1, const Value& val2) noexcept;
     void mod(const Value& val1, const Value& val2) noexcept;
 
+    // Create cond branch
+    Conditional_branch branch_eq(const Value& val1, const Value& val2) noexcept;
+    Conditional_branch branch_neq(const Value& val1, const Value& val2) noexcept;
+    Conditional_branch branch_gt(const Value& val1, const Value& val2) noexcept;
+    Conditional_branch branch_lt(const Value& val1, const Value& val2) noexcept;
+    Conditional_branch branch_geq(const Value& val1, const Value& val2) noexcept;
+    Conditional_branch branch_leq(const Value& val1, const Value& val2) noexcept;
+
     // Iteration = (to + 1) - from Result will be in retval register
     void calculate_for_iterations(const Value& from, const Value& to) noexcept;
 
     void start_for_loop(const Loop_for& loop) noexcept;
     void do_for_loop(const Loop_for& loop) noexcept;
+
+    void start_while_loop(const Loop_while& loop) noexcept;
+    void do_while_loop(const Loop_while& loop) noexcept;
 
     void finish_program() noexcept;
 

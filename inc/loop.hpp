@@ -33,6 +33,8 @@ public:
 
     const std::string& get_start_label() const noexcept { return start_label; }
     const std::string& get_end_label() const noexcept { return end_label; }
+    void set_start_label(const std::string& label) noexcept { start_label = label; }
+    void set_end_label(const std::string& label) noexcept { end_label = label; }
     looptype_t get_type() const noexcept { return type; }
 };
 
