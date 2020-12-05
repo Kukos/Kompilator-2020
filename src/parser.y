@@ -463,14 +463,27 @@ whileend:
 repeatdeclar:
     YY_REPEAT
     {
+        const std::string label_start = compiler.get_asm_generator().get_label_manager().create_label("REPEAT_START");
 
+        Loop* loop = new Loop_until(label_start, std::string("to_be_defined_later"));
+        compiler.get_loop_manager().add_loop_to_stack(loop);
+
+        compiler.get_asm_generator().start_until_loop(*dynamic_cast<Loop_until*>(loop));
     }
 ;
 
 repeatend:
     commands YY_UNTIL cond YY_SEMICOLON
     {
+        Loop* loop = compiler.get_loop_manager().get_loop_from_stack();
 
+        // now we can get false label name. False label from cond will be our end label
+        Conditional_branch branch = compiler.get_branch_manager().get_branch_from_stack();
+        loop->set_end_label(branch.get_label_false());
+
+        compiler.get_asm_generator().do_until_loop(*dynamic_cast<Loop_until*>(loop));
+
+        delete loop;
     }
 ;
 

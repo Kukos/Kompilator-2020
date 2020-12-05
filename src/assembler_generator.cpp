@@ -901,8 +901,25 @@ void Assembler_generator::start_while_loop(const Loop_while& loop) noexcept
 {
     label_manager.insert_label(loop.get_start_label());
 }
+
 void Assembler_generator::do_while_loop(const Loop_while& loop) noexcept
 {
     asm_jump_label(loop.get_start_label());
     label_manager.insert_label(loop.get_end_label());
+}
+
+void Assembler_generator::start_until_loop(const Loop_until& loop) noexcept
+{
+    label_manager.insert_label(loop.get_start_label());
+}
+
+void Assembler_generator::do_until_loop(const Loop_until& loop) noexcept
+{
+    const std::string label_end = label_manager.create_label("UNTIL_END");
+    asm_jump_label(label_end);
+
+    label_manager.insert_label(loop.get_end_label());
+    asm_jump_label(loop.get_start_label());
+
+    label_manager.insert_label(label_end);
 }

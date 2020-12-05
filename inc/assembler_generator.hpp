@@ -13,6 +13,7 @@
 #include <loop.hpp>
 #include <loop-for.hpp>
 #include <loop-while.hpp>
+#include <loop-until.hpp>
 #include <conditional_branch.hpp>
 
 class Assembler_generator
@@ -108,6 +109,9 @@ public:
 
     void start_while_loop(const Loop_while& loop) noexcept;
     void do_while_loop(const Loop_while& loop) noexcept;
+
+    void start_until_loop(const Loop_until& loop) noexcept;
+    void do_until_loop(const Loop_until& loop) noexcept;
 
     void finish_program() noexcept;
 
