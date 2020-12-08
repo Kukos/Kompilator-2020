@@ -145,6 +145,9 @@ lvalue:
         compiler.assert_usage(*($1.str), Value::VALTYPE_LVALUE_ARRAY, $1.line);
         compiler.assert_usage(*($3.str), Value::VALTYPE_LVALUE_VAR, $3.line);
 
+        // token t(a) is created after a. So a should always be init here
+        compiler.assert_initalization(compiler.get_var_manager().get_variable(*($3.str)).get(), $1.line);
+
         Lvalue_array* array = dynamic_cast<Lvalue_array*>(compiler.get_var_manager().get_variable(*($1.str)).get());
         auto var = compiler.get_var_manager().get_variable(*($3.str));
 
