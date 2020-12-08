@@ -584,3 +584,215 @@ fi
 rm -f $asm_file
 rm -f $out_file
 rm -f $error_file
+
+# TESTS 2020y from M GEBALA
+
+# TEST 1 created by Maciej Gebala
+in_file="./e2e_gebala_2020_1.txt"
+asm_file="./asm.txt"
+out_file="./out.txt"
+expected_out_file="./e2e_gebala_2020_1_expected.txt"
+error_file="./error.txt"
+name="e2e gebala2020 1"
+../kompilator $in_file $asm_file 2>$error_file
+echo -n "TEST: $name ..."
+echo "1 0" | ../vm/maszyna-wirtualna-cln $asm_file | sed 's/? //g' | grep ">" | sed 's/> //g' >$out_file
+diff_res=$(diff $out_file $expected_out_file)
+if [ -s $error_file ] || [ "$diff_res" ]; then
+    echo -e " \033[0;31mFAILED\033[0m"
+else
+    echo -e " \033[0;32mPASSED\033[0m"
+fi
+
+rm -f $asm_file
+rm -f $out_file
+rm -f $error_file
+
+# TEST 2 created by Maciej Gebala
+in_file="./e2e_gebala_2020_2.txt"
+asm_file="./asm.txt"
+out_file="./out.txt"
+expected_out_file="./e2e_gebala_2020_2_expected.txt"
+error_file="./error.txt"
+name="e2e gebala2020 2"
+../kompilator $in_file $asm_file 2>$error_file
+echo -n "TEST: $name ..."
+echo "11" | ../vm/maszyna-wirtualna-cln $asm_file | sed 's/? //g' | grep ">" | sed 's/> //g' >$out_file
+diff_res=$(diff $out_file $expected_out_file)
+if [ -s $error_file ] || [ "$diff_res" ]; then
+    echo -e " \033[0;31mFAILED\033[0m"
+else
+    echo -e " \033[0;32mPASSED\033[0m"
+fi
+
+rm -f $asm_file
+rm -f $out_file
+rm -f $error_file
+
+# TEST 3 created by Maciej Gebala
+in_file="./e2e_gebala_2020_3.txt"
+asm_file="./asm.txt"
+out_file="./out.txt"
+expected_out_file="./e2e_gebala_2020_3_expected.txt"
+error_file="./error.txt"
+name="e2e gebala2020 3"
+../kompilator $in_file $asm_file 2>$error_file
+echo -n "TEST: $name ..."
+echo "1" | ../vm/maszyna-wirtualna-cln $asm_file | sed 's/? //g' | grep ">" | sed 's/> //g' >$out_file
+diff_res=$(diff $out_file $expected_out_file)
+if [ -s $error_file ] || [ "$diff_res" ]; then
+    echo -e " \033[0;31mFAILED\033[0m"
+else
+    echo -e " \033[0;32mPASSED\033[0m"
+fi
+
+rm -f $asm_file
+rm -f $out_file
+rm -f $error_file
+
+# TEST 4 created by Maciej Gebala
+in_file="./e2e_gebala_2020_4.txt"
+asm_file="./asm.txt"
+out_file="./out.txt"
+expected_out_file="./e2e_gebala_2020_4_expected.txt"
+error_file="./error.txt"
+name="e2e gebala2020 4"
+../kompilator $in_file $asm_file 2>$error_file
+echo -n "TEST: $name ..."
+echo "20" | ../vm/maszyna-wirtualna-cln $asm_file | sed 's/? //g' | grep ">" | sed 's/> //g' >$out_file
+diff_res=$(diff $out_file $expected_out_file)
+if [ -s $error_file ] || [ "$diff_res" ]; then
+    echo -e " \033[0;31mFAILED\033[0m"
+else
+    echo -e " \033[0;32mPASSED\033[0m"
+fi
+
+rm -f $asm_file
+rm -f $out_file
+rm -f $error_file
+
+# TEST 5 created by Maciej Gebala
+in_file="./e2e_gebala_2020_5.txt"
+asm_file="./asm.txt"
+out_file="./out.txt"
+expected_out_file="./e2e_gebala_2020_5_expected.txt"
+error_file="./error.txt"
+name="e2e gebala2020 5"
+../kompilator $in_file $asm_file 2>$error_file
+echo -n "TEST: $name ..."
+echo "20" | ../vm/maszyna-wirtualna-cln $asm_file | sed 's/? //g' | grep ">" | sed 's/> //g' >$out_file
+diff_res=$(diff $out_file $expected_out_file)
+if [ -s $error_file ] || [ "$diff_res" ]; then
+    echo -e " \033[0;31mFAILED\033[0m"
+else
+    echo -e " \033[0;32mPASSED\033[0m"
+fi
+
+rm -f $asm_file
+rm -f $out_file
+rm -f $error_file
+
+# TEST 6 created by Maciej Gebala
+in_file="./e2e_gebala_2020_6.txt"
+asm_file="./asm.txt"
+out_file="./out.txt"
+expected_out_file="./e2e_gebala_2020_6_expected.txt"
+error_file="./error.txt"
+name="e2e gebala2020 6"
+../kompilator $in_file $asm_file 2>$error_file
+echo -n "TEST: $name ..."
+../vm/maszyna-wirtualna-cln $asm_file | sed 's/? //g' | grep ">" | sed 's/> //g' >$out_file
+diff_res=$(diff $out_file $expected_out_file)
+if [ -s $error_file ] || [ "$diff_res" ]; then
+    echo -e " \033[0;31mFAILED\033[0m"
+else
+    echo -e " \033[0;32mPASSED\033[0m"
+fi
+
+rm -f $asm_file
+rm -f $out_file
+rm -f $error_file
+
+# TEST 7 created by Maciej Gebala
+in_file="./e2e_gebala_2020_7.txt"
+asm_file="./asm.txt"
+out_file="./out.txt"
+expected_out_file="./e2e_gebala_2020_7_expected.txt"
+error_file="./error.txt"
+name="e2e gebala2020 7"
+../kompilator $in_file $asm_file 2>$error_file
+echo -n "TEST: $name ..."
+echo "1234567890 1234567890987654321 987654321" | ../vm/maszyna-wirtualna-cln $asm_file | sed 's/? //g' | grep ">" | sed 's/> //g' >$out_file
+diff_res=$(diff $out_file $expected_out_file)
+if [ -s $error_file ] || [ "$diff_res" ]; then
+    echo -e " \033[0;31mFAILED\033[0m"
+else
+    echo -e " \033[0;32mPASSED\033[0m"
+fi
+
+rm -f $asm_file
+rm -f $out_file
+rm -f $error_file
+
+# TEST 8 created by Maciej Gebala
+in_file="./e2e_gebala_2020_8.txt"
+asm_file="./asm.txt"
+out_file="./out.txt"
+expected_out_file="./e2e_gebala_2020_8_expected.txt"
+error_file="./error.txt"
+name="e2e gebala2020 8"
+../kompilator $in_file $asm_file 2>$error_file
+echo -n "TEST: $name ..."
+echo "0 0 0" | ../vm/maszyna-wirtualna-cln $asm_file | sed 's/? //g' | grep ">" | sed 's/> //g' >$out_file
+diff_res=$(diff $out_file $expected_out_file)
+if [ -s $error_file ] || [ "$diff_res" ]; then
+    echo -e " \033[0;31mFAILED\033[0m"
+else
+    echo -e " \033[0;32mPASSED\033[0m"
+fi
+
+rm -f $asm_file
+rm -f $out_file
+rm -f $error_file
+
+# TEST 9 created by Maciej Gebala
+in_file="./e2e_gebala_2020_9.txt"
+asm_file="./asm.txt"
+out_file="./out.txt"
+expected_out_file="./e2e_gebala_2020_9_expected.txt"
+error_file="./error.txt"
+name="e2e gebala2020 9"
+../kompilator $in_file $asm_file 2>$error_file
+echo -n "TEST: $name ..."
+echo "12 23 34" | ../vm/maszyna-wirtualna-cln $asm_file | sed 's/? //g' | grep ">" | sed 's/> //g' >$out_file
+diff_res=$(diff $out_file $expected_out_file)
+if [ -s $error_file ] || [ "$diff_res" ]; then
+    echo -e " \033[0;31mFAILED\033[0m"
+else
+    echo -e " \033[0;32mPASSED\033[0m"
+fi
+
+rm -f $asm_file
+rm -f $out_file
+rm -f $error_file
+
+# TEST 10 created by Maciej Gebala
+in_file="./e2e_gebala_2020_10.txt"
+asm_file="./asm.txt"
+out_file="./out.txt"
+expected_out_file="./e2e_gebala_2020_10_expected.txt"
+error_file="./error.txt"
+name="e2e gebala2020 10"
+../kompilator $in_file $asm_file 2>$error_file
+echo -n "TEST: $name ..."
+../vm/maszyna-wirtualna-cln $asm_file | sed 's/? //g' | grep ">" | sed 's/> //g' >$out_file
+diff_res=$(diff $out_file $expected_out_file)
+if [ -s $error_file ] || [ "$diff_res" ]; then
+    echo -e " \033[0;31mFAILED\033[0m"
+else
+    echo -e " \033[0;32mPASSED\033[0m"
+fi
+
+rm -f $asm_file
+rm -f $out_file
+rm -f $error_file
