@@ -796,3 +796,293 @@ fi
 rm -f $asm_file
 rm -f $out_file
 rm -f $error_file
+
+# TESTS 2020y from K GOTFRYD
+
+# Test1 ERROR
+in_file="./gramma_error_gotfryd_2020_1.txt"
+out_file="./out.txt"
+error_file="./error.txt"
+expected_error_file="./gramma_error_gotfryd_2020_1_expected.txt"
+name="gramma error gotfryd2020 1"
+echo -n "TEST: $name ..."
+../kompilator $in_file $out_file 2>$error_file
+diff_res=$(diff $error_file $expected_error_file)
+if [ $? -eq 1 ] || [ "$diff_res" ]; then
+    echo -e " \033[0;31mFAILED\033[0m"
+else
+    echo -e " \033[0;32mPASSED\033[0m"
+fi
+
+rm -f $out_file
+rm -f $error_file
+
+# Test2 ERROR
+in_file="./gramma_error_gotfryd_2020_2.txt"
+out_file="./out.txt"
+error_file="./error.txt"
+expected_error_file="./gramma_error_gotfryd_2020_2_expected.txt"
+name="gramma error gotfryd2020 2"
+echo -n "TEST: $name ..."
+../kompilator $in_file $out_file 2>$error_file
+diff_res=$(diff $error_file $expected_error_file)
+if [ $? -eq 1 ] || [ "$diff_res" ]; then
+    echo -e " \033[0;31mFAILED\033[0m"
+else
+    echo -e " \033[0;32mPASSED\033[0m"
+fi
+
+rm -f $out_file
+rm -f $error_file
+
+# Test3 ERROR
+in_file="./gramma_error_gotfryd_2020_3.txt"
+out_file="./out.txt"
+error_file="./error.txt"
+expected_error_file="./gramma_error_gotfryd_2020_3_expected.txt"
+name="gramma error gotfryd2020 3"
+echo -n "TEST: $name ..."
+../kompilator $in_file $out_file 2>$error_file
+diff_res=$(diff $error_file $expected_error_file)
+if [ $? -eq 1 ] || [ "$diff_res" ]; then
+    echo -e " \033[0;31mFAILED\033[0m"
+else
+    echo -e " \033[0;32mPASSED\033[0m"
+fi
+
+rm -f $out_file
+rm -f $error_file
+
+# Test4 ERROR
+in_file="./gramma_error_gotfryd_2020_4.txt"
+out_file="./out.txt"
+error_file="./error.txt"
+expected_error_file="./gramma_error_gotfryd_2020_4_expected.txt"
+name="gramma error gotfryd2020 4"
+echo -n "TEST: $name ..."
+../kompilator $in_file $out_file 2>$error_file
+diff_res=$(diff $error_file $expected_error_file)
+if [ $? -eq 1 ] || [ "$diff_res" ]; then
+    echo -e " \033[0;31mFAILED\033[0m"
+else
+    echo -e " \033[0;32mPASSED\033[0m"
+fi
+
+rm -f $out_file
+rm -f $error_file
+
+# Test5 ERROR
+in_file="./gramma_error_gotfryd_2020_5.txt"
+out_file="./out.txt"
+error_file="./error.txt"
+expected_error_file="./gramma_error_gotfryd_2020_5_expected.txt"
+name="gramma error gotfryd2020 5"
+echo -n "TEST: $name ..."
+../kompilator $in_file $out_file 2>$error_file
+diff_res=$(diff $error_file $expected_error_file)
+if [ $? -eq 1 ] || [ "$diff_res" ]; then
+    echo -e " \033[0;31mFAILED\033[0m"
+else
+    echo -e " \033[0;32mPASSED\033[0m"
+fi
+
+rm -f $out_file
+rm -f $error_file
+
+# Test6 ERROR
+in_file="./gramma_error_gotfryd_2020_6.txt"
+out_file="./out.txt"
+error_file="./error.txt"
+expected_error_file="./gramma_error_gotfryd_2020_6_expected.txt"
+name="gramma error gotfryd2020 6"
+echo -n "TEST: $name ..."
+../kompilator $in_file $out_file 2>$error_file
+diff_res=$(diff $error_file $expected_error_file)
+if [ $? -eq 1 ] || [ "$diff_res" ]; then
+    echo -e " \033[0;31mFAILED\033[0m"
+else
+    echo -e " \033[0;32mPASSED\033[0m"
+fi
+
+rm -f $out_file
+rm -f $error_file
+
+# Test7 ERROR
+in_file="./gramma_error_gotfryd_2020_7.txt"
+out_file="./out.txt"
+error_file="./error.txt"
+expected_error_file="./gramma_error_gotfryd_2020_7_expected.txt"
+name="gramma error gotfryd2020 7"
+echo -n "TEST: $name ..."
+../kompilator $in_file $out_file 2>$error_file
+diff_res=$(diff $error_file $expected_error_file)
+if [ $? -eq 1 ] || [ "$diff_res" ]; then
+    echo -e " \033[0;31mFAILED\033[0m"
+else
+    echo -e " \033[0;32mPASSED\033[0m"
+fi
+
+rm -f $out_file
+rm -f $error_file
+
+# Test8 ERROR
+in_file="./gramma_error_gotfryd_2020_8.txt"
+out_file="./out.txt"
+error_file="./error.txt"
+expected_error_file="./gramma_error_gotfryd_2020_8_expected.txt"
+name="gramma error gotfryd2020 8"
+echo -n "TEST: $name ..."
+../kompilator $in_file $out_file 2>$error_file
+diff_res=$(diff $error_file $expected_error_file)
+if [ $? -eq 1 ] || [ "$diff_res" ]; then
+    echo -e " \033[0;31mFAILED\033[0m"
+else
+    echo -e " \033[0;32mPASSED\033[0m"
+fi
+
+rm -f $out_file
+rm -f $error_file
+
+# Test9 ERROR
+in_file="./gramma_error_gotfryd_2020_9.txt"
+out_file="./out.txt"
+error_file="./error.txt"
+expected_error_file="./gramma_error_gotfryd_2020_9_expected.txt"
+name="gramma error gotfryd2020 9"
+echo -n "TEST: $name ..."
+../kompilator $in_file $out_file 2>$error_file
+diff_res=$(diff $error_file $expected_error_file)
+if [ $? -eq 1 ] || [ "$diff_res" ]; then
+    echo -e " \033[0;31mFAILED\033[0m"
+else
+    echo -e " \033[0;32mPASSED\033[0m"
+fi
+
+rm -f $out_file
+rm -f $error_file
+
+# Test10 ERROR
+in_file="./gramma_error_gotfryd_2020_10.txt"
+out_file="./out.txt"
+error_file="./error.txt"
+expected_error_file="./gramma_error_gotfryd_2020_10_expected.txt"
+name="gramma error gotfryd2020 10"
+echo -n "TEST: $name ..."
+../kompilator $in_file $out_file 2>$error_file
+diff_res=$(diff $error_file $expected_error_file)
+if [ $? -eq 1 ] || [ "$diff_res" ]; then
+    echo -e " \033[0;31mFAILED\033[0m"
+else
+    echo -e " \033[0;32mPASSED\033[0m"
+fi
+
+rm -f $out_file
+rm -f $error_file
+
+# Test11 ERROR
+in_file="./gramma_error_gotfryd_2020_11.txt"
+out_file="./out.txt"
+error_file="./error.txt"
+expected_error_file="./gramma_error_gotfryd_2020_11_expected.txt"
+name="gramma error gotfryd2020 11"
+echo -n "TEST: $name ..."
+../kompilator $in_file $out_file 2>$error_file
+diff_res=$(diff $error_file $expected_error_file)
+if [ $? -eq 1 ] || [ "$diff_res" ]; then
+    echo -e " \033[0;31mFAILED\033[0m"
+else
+    echo -e " \033[0;32mPASSED\033[0m"
+fi
+
+rm -f $out_file
+rm -f $error_file
+
+# Test12 ERROR
+in_file="./gramma_error_gotfryd_2020_12.txt"
+out_file="./out.txt"
+error_file="./error.txt"
+expected_error_file="./gramma_error_gotfryd_2020_12_expected.txt"
+name="gramma error gotfryd2020 12"
+echo -n "TEST: $name ..."
+../kompilator $in_file $out_file 2>$error_file
+diff_res=$(diff $error_file $expected_error_file)
+if [ $? -eq 1 ] || [ "$diff_res" ]; then
+    echo -e " \033[0;31mFAILED\033[0m"
+else
+    echo -e " \033[0;32mPASSED\033[0m"
+fi
+
+rm -f $out_file
+rm -f $error_file
+
+# Test13 ERROR
+in_file="./gramma_error_gotfryd_2020_13.txt"
+out_file="./out.txt"
+error_file="./error.txt"
+expected_error_file="./gramma_error_gotfryd_2020_13_expected.txt"
+name="gramma error gotfryd2020 13"
+echo -n "TEST: $name ..."
+../kompilator $in_file $out_file 2>$error_file
+diff_res=$(diff $error_file $expected_error_file)
+if [ $? -eq 1 ] || [ "$diff_res" ]; then
+    echo -e " \033[0;31mFAILED\033[0m"
+else
+    echo -e " \033[0;32mPASSED\033[0m"
+fi
+
+rm -f $out_file
+rm -f $error_file
+
+# Test14 ERROR
+in_file="./gramma_error_gotfryd_2020_14.txt"
+out_file="./out.txt"
+error_file="./error.txt"
+expected_error_file="./gramma_error_gotfryd_2020_14_expected.txt"
+name="gramma error gotfryd2020 14"
+echo -n "TEST: $name ..."
+../kompilator $in_file $out_file 2>$error_file
+diff_res=$(diff $error_file $expected_error_file)
+if [ $? -eq 1 ] || [ "$diff_res" ]; then
+    echo -e " \033[0;31mFAILED\033[0m"
+else
+    echo -e " \033[0;32mPASSED\033[0m"
+fi
+
+rm -f $out_file
+rm -f $error_file
+
+# Test15 ERROR
+in_file="./gramma_error_gotfryd_2020_15.txt"
+out_file="./out.txt"
+error_file="./error.txt"
+expected_error_file="./gramma_error_gotfryd_2020_15_expected.txt"
+name="gramma error gotfryd2020 15"
+echo -n "TEST: $name ..."
+../kompilator $in_file $out_file 2>$error_file
+diff_res=$(diff $error_file $expected_error_file)
+if [ $? -eq 1 ] || [ "$diff_res" ]; then
+    echo -e " \033[0;31mFAILED\033[0m"
+else
+    echo -e " \033[0;32mPASSED\033[0m"
+fi
+
+rm -f $out_file
+rm -f $error_file
+
+# Test16 ERROR
+in_file="./gramma_error_gotfryd_2020_16.txt"
+out_file="./out.txt"
+error_file="./error.txt"
+expected_error_file="./gramma_error_gotfryd_2020_16_expected.txt"
+name="gramma error gotfryd2020 16"
+echo -n "TEST: $name ..."
+../kompilator $in_file $out_file 2>$error_file
+diff_res=$(diff $error_file $expected_error_file)
+if [ $? -eq 1 ] || [ "$diff_res" ]; then
+    echo -e " \033[0;31mFAILED\033[0m"
+else
+    echo -e " \033[0;32mPASSED\033[0m"
+fi
+
+rm -f $out_file
+rm -f $error_file
